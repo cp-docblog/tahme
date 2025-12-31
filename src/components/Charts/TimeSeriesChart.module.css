@@ -1,0 +1,15 @@
+.container {
+    width: 100%;
+    padding: 20px;
+    background: var(--color-surface);
+    border-radius: 12px;
+}
+
+.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    color: var(--text-secondary, #6b7280);
+    font-size: 14px;
+}

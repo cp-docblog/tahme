@@ -1,46 +1,256 @@
-# Getting Started with Create React App
+# تشويش - Tashweesh Campaign Management UI
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+نظام إدارة وتحليل الحملات التسويقية لوكالة تشويش
 
-## Available Scripts
+## المميزات
 
-In the project directory, you can run:
+- 🎨 واجهة مستخدم عربية بالكامل (RTL)
+- 🎨 تصميم عصري بألوان الفيروزي (Turquoise)
+- 👥 إدارة المستخدمين (مالك، مدير، موظف)
+- 🏢 إدارة العملاء مع بيانات الاعتماد للمنصات
+- 📊 تحليل الحملات مع التكامل مع Backend
+- 🗄️ قاعدة بيانات Supabase
+- ⚡ React + TypeScript
 
-### `npm start`
+## التقنيات المستخدمة
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- **Frontend**: React 18 + TypeScript
+- **Routing**: React Router DOM
+- **Database**: Supabase (PostgreSQL)
+- **Styling**: Vanilla CSS (CSS Modules)
+- **Font**: Cairo (Google Fonts)
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## التثبيت والإعداد
 
-### `npm test`
+### 1. تثبيت المكتبات
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+npm install
+```
 
-### `npm run build`
+### 2. إعداد Supabase
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. أنشئ مشروع جديد على [Supabase](https://supabase.com)
+2. قم بتشغيل SQL التالي لإنشاء الجداول:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```sql
+-- Create profiles table
+CREATE TABLE profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id),
+  email TEXT NOT NULL,
+  full_name TEXT,
+  role TEXT NOT NULL CHECK (role IN ('owner', 'admin', 'staff')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+-- Create clients table
+CREATE TABLE clients (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  clickup_folder TEXT,
+  contact_name TEXT,
+  contact_email TEXT,
+  contact_phone TEXT,
+  tiktok_username TEXT,
+  tiktok_password TEXT,
+  snapchat_username TEXT,
+  snapchat_password TEXT,
+  facebook_username TEXT,
+  facebook_password TEXT,
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
-### `npm run eject`
+-- Create campaigns table
+CREATE TABLE campaigns (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id UUID REFERENCES clients(id),
+  name TEXT NOT NULL,
+  platform TEXT NOT NULL CHECK (platform IN ('tiktok', 'snapchat', 'facebook')),
+  campaign_data JSONB,
+  status TEXT NOT NULL CHECK (status IN ('active', 'paused', 'completed')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+-- Enable Row Level Security
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE campaigns ENABLE ROW LEVEL SECURITY;
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+-- Create policies (adjust as needed)
+CREATE POLICY "Enable read access for authenticated users" ON profiles
+  FOR SELECT USING (auth.role() = 'authenticated');
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+CREATE POLICY "Enable all access for authenticated users" ON clients
+  FOR ALL USING (auth.role() = 'authenticated');
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+CREATE POLICY "Enable all access for authenticated users" ON campaigns
+  FOR ALL USING (auth.role() = 'authenticated');
+```
 
-## Learn More
+### 3. إعداد المتغيرات البيئية
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+انسخ الملف `.env.example` إلى `.env`:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```bash
+cp .env.example .env
+```
+
+ثم قم بتعديل القيم:
+
+```env
+REACT_APP_SUPABASE_URL=your_supabase_project_url
+REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### 4. تشغيل التطبيق
+
+```bash
+npm start
+```
+
+سيتم فتح التطبيق على `http://localhost:3000`
+
+## البنية
+
+```
+src/
+├── components/
+│   ├── Layout/
+│   │   ├── Sidebar.tsx          # القائمة الجانبية
+│   │   └── MainLayout.tsx       # التخطيط الرئيسي
+│   └── UI/
+│       ├── Button.tsx           # زر مخصص
+│       ├── Input.tsx            # حقل إدخال
+│       └── Card.tsx             # بطاقة
+├── pages/
+│   ├── Dashboard.tsx            # لوحة التحكم
+│   ├── Users.tsx                # إدارة المستخدمين
+│   ├── Clients.tsx              # قائمة العملاء
+│   ├── NewClient.tsx            # إضافة عميل جديد
+│   └── Campaigns.tsx            # تحليل الحملات
+├── lib/
+│   ├── supabase.ts              # إعداد Supabase
+│   └── database.types.ts        # أنواع قاعدة البيانات
+└── styles/
+    ├── globals.css              # الأنماط العامة
+    └── animations.css           # الحركات
+```
+
+## الصفحات
+
+### 1. لوحة التحكم (Dashboard)
+- عرض الإحصائيات
+- النشاط الأخير
+
+### 2. إدارة المستخدمين (Users)
+- عرض قائمة المستخدمين
+- إضافة مستخدم جديد (مالك، مدير، موظف)
+
+### 3. إدارة العملاء (Clients)
+- عرض قائمة العملاء
+- إضافة عميل جديد مع:
+  - معلومات العميل (الاسم، جهة الاتصال، مجلد ClickUp)
+  - بيانات اعتماد TikTok
+  - بيانات اعتماد Snapchat
+  - بيانات اعتماد Facebook
+
+### 4. تحليل الحملات (Campaigns)
+- عرض الحملات
+- اختيار حملات للتحليل
+- إرسال البيانات إلى Backend Webhook
+
+## التكامل مع Backend
+
+عند الضغط على "تحليل" في صفحة الحملات، يتم إرسال البيانات إلى:
+
+```
+POST https://aibackend.cp-devcode.com/webhooks
+```
+
+البيانات المرسلة:
+```json
+{
+  "campaigns": [...],
+  "action": "analyze"
+}
+```
+
+## البناء للإنتاج
+
+```bash
+npm run build
+```
+
+## النشر باستخدام Docker
+
+### البناء والتشغيل باستخدام Docker
+
+#### 1. بناء الصورة (Image)
+
+```bash
+docker build \
+  --build-arg REACT_APP_SUPABASE_URL=your_supabase_url \
+  --build-arg REACT_APP_SUPABASE_ANON_KEY=your_anon_key \
+  --build-arg REACT_APP_BACKEND_WEBHOOK=https://aibackend.cp-devcode.com/webhooks \
+  -t tashweesh:latest .
+```
+
+#### 2. تشغيل الحاوية (Container)
+
+```bash
+docker run -d -p 3000:80 --name tashweesh tashweesh:latest
+```
+
+سيكون التطبيق متاحاً على `http://localhost:3000`
+
+### استخدام Docker Compose (الطريقة الموصى بها)
+
+#### 1. تأكد من وجود ملف `.env` مع المتغيرات المطلوبة
+
+```env
+REACT_APP_SUPABASE_URL=your_supabase_url
+REACT_APP_SUPABASE_ANON_KEY=your_anon_key
+REACT_APP_BACKEND_WEBHOOK=https://aibackend.cp-devcode.com/webhooks
+```
+
+#### 2. بناء وتشغيل التطبيق
+
+```bash
+docker-compose up -d
+```
+
+#### 3. إيقاف التطبيق
+
+```bash
+docker-compose down
+```
+
+#### 4. إعادة البناء بعد التغييرات
+
+```bash
+docker-compose up -d --build
+```
+
+### الأوامر المفيدة
+
+```bash
+# عرض السجلات (Logs)
+docker-compose logs -f
+
+# فحص الحالة الصحية (Health Check)
+docker-compose ps
+
+# إعادة تشغيل الخدمة
+docker-compose restart
+
+# حذف الحاوية والصورة
+docker-compose down --rmi all
+```
+
+## الترخيص
+
+© 2024 تشويش - جميع الحقوق محفوظة

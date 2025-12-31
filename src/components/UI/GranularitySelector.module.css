@@ -1,0 +1,53 @@
+.container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+}
+
+.buttonGroup {
+    display: flex;
+    gap: 4px;
+    background: var(--color-bg-tertiary);
+    padding: 4px;
+    border-radius: 8px;
+}
+
+.button {
+    padding: 6px 16px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.button:hover {
+    background: rgba(20, 184, 166, 0.1);
+    color: var(--color-primary);
+}
+
+.button.active {
+    background: var(--color-primary);
+    color: white;
+}
+
+.button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* RTL Support */
+[dir='rtl'] .container {
+    flex-direction: row-reverse;
+}

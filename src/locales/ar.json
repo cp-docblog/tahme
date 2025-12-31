@@ -1,0 +1,285 @@
+{
+    "app": {
+        "name": "تشويش",
+        "tagline": "نظام إدارة الحملات التسويقية",
+        "version": "نسخة 1.0.0"
+    },
+    "nav": {
+        "dashboard": "لوحة التحكم",
+        "users": "إدارة المستخدمين",
+        "clients": "إدارة العملاء",
+        "campaigns": "تحليل الحملات"
+    },
+    "dashboard": {
+        "title": "لوحة التحكم",
+        "subtitle": "مرحباً بك في نظام إدارة الحملات التسويقية",
+        "stats": {
+            "totalClients": "إجمالي العملاء",
+            "activeCampaigns": "الحملات النشطة",
+            "users": "المستخدمين",
+            "completedAnalyses": "التحليلات المكتملة"
+        },
+        "recentActivity": "النشاط الأخير",
+        "activities": {
+            "newClient": "تم إضافة عميل جديد: {{name}}",
+            "campaignComplete": "اكتمل تحليل حملة {{platform}} للعميل {{client}}",
+            "newUser": "تم إضافة مستخدم جديد: {{name}}",
+            "time": {
+                "hoursAgo": "منذ {{count}} ساعة",
+                "hoursAgo_plural": "منذ {{count}} ساعات",
+                "daysAgo": "منذ {{count}} يوم",
+                "daysAgo_plural": "منذ {{count}} أيام"
+            }
+        }
+    },
+    "users": {
+        "title": "إدارة المستخدمين",
+        "subtitle": "إدارة فريق العمل والصلاحيات",
+        "addUser": "إضافة مستخدم",
+        "search": "البحث عن مستخدم...",
+        "table": {
+            "name": "الاسم",
+            "email": "البريد الإلكتروني",
+            "role": "الدور",
+            "joinDate": "تاريخ الانضمام",
+            "actions": "الإجراءات"
+        },
+        "roles": {
+            "owner": "مالك",
+            "admin": "مدير",
+            "staff": "موظف"
+        },
+        "actions": {
+            "edit": "تعديل",
+            "delete": "حذف"
+        }
+    },
+    "clients": {
+        "title": "إدارة العملاء",
+        "subtitle": "إدارة قاعدة بيانات العملاء",
+        "addClient": "إضافة عميل جديد",
+        "search": "البحث عن عميل...",
+        "table": {
+            "name": "اسم العميل",
+            "contact": "جهة الاتصال",
+            "platforms": "المنصات",
+            "campaigns": "الحملات",
+            "actions": "الإجراءات"
+        },
+        "actions": {
+            "view": "عرض",
+            "edit": "تعديل",
+            "delete": "حذف"
+        },
+        "integrations": {
+            "title": "التكاملات",
+            "available": "متاح",
+            "comingSoon": "قريباً",
+            "connect": "ربط",
+            "snapchatDescription": "اربط حسابك الإعلاني في سناب شات لإدارة وتحليل حملاتك مباشرة من لوحة التحكم.",
+            "tiktokDescription": "تكامل إعلانات تيك توك قادم قريباً. ترقبوا التحديثات!",
+            "facebookDescription": "تكامل إعلانات فيسبوك قادم قريباً. ترقبوا التحديثات!"
+        }
+    },
+    "newClient": {
+        "title": "إضافة عميل جديد",
+        "subtitle": "أدخل معلومات العميل وبيانات المنصات",
+        "sections": {
+            "basic": "المعلومات الأساسية",
+            "contact": "معلومات الاتصال",
+            "platforms": "بيانات المنصات"
+        },
+        "fields": {
+            "clientName": "اسم العميل",
+            "clickupFolder": "مجلد ClickUp",
+            "contactName": "اسم جهة الاتصال",
+            "contactEmail": "البريد الإلكتروني",
+            "contactPhone": "رقم الهاتف",
+            "tiktokUsername": "اسم المستخدم TikTok",
+            "tiktokPassword": "كلمة المرور TikTok",
+            "snapchatUsername": "اسم المستخدم Snapchat",
+            "snapchatPassword": "كلمة المرور Snapchat",
+            "snapchatAccountId": "معرف حساب Snapchat",
+            "snapchatAccountName": "اسم حساب Snapchat",
+            "adAccount": "حساب الإعلانات",
+            "facebookUsername": "اسم المستخدم Facebook",
+            "facebookPassword": "كلمة المرور Facebook"
+        },
+        "actions": {
+            "save": "حفظ العميل",
+            "cancel": "إلغاء"
+        },
+        "selectAdAccount": "اختر حساب إعلانات",
+        "adAccountStatus": {
+            "active": "نشط",
+            "inactive": "غير نشط"
+        },
+        "comingSoon": "قريباً"
+    },
+    "campaigns": {
+        "title": "تحليل الحملات",
+        "subtitle": "تتبع وتحليل أداء الحملات التسويقية",
+        "selectClient": "اختر عميلاً",
+        "selectPlatform": "اختر المنصة",
+        "campaignsFor": "حملات",
+        "adSquadsInCampaign": "مجموعات الإعلانات في الحملة",
+        "adsInAdSquad": "إعلانات مجموعة الإعلانات",
+        "noCampaigns": "لا توجد حملات",
+        "noAdSquads": "لا توجد مجموعات إعلانات",
+        "noAds": "لا توجد إعلانات",
+        "noClients": "لا توجد عملاء",
+        "addClientFirst": "الرجاء إضافة عميل أولاً",
+        "totalCampaigns": "إجمالي الحملات",
+        "activeCampaigns": "الحملات النشطة",
+        "totalAdSquads": "إجمالي المجموعات",
+        "activeAdSquads": "المجموعات النشطة",
+        "totalAds": "إجمالي الإعلانات",
+        "activeAds": "الإعلانات النشطة",
+        "approved": "المعتمدة",
+        "objective": "الهدف",
+        "dailyBudget": "الميزانية اليومية",
+        "bid": "المزايدة",
+        "goal": "الهدف",
+        "delivery": "التسليم",
+        "addCampaign": "إضافة حملة",
+        "search": "البحث عن حملة...",
+        "filters": "الفلاتر",
+        "table": {
+            "name": "اسم الحملة",
+            "client": "العميل",
+            "platform": "المنصة",
+            "status": "الحالة",
+            "performance": "الأداء",
+            "actions": "الإجراءات"
+        },
+        "platforms": {
+            "tiktok": "تيك توك",
+            "snapchat": "سناب شات",
+            "facebook": "فيسبوك"
+        },
+        "status": {
+            "active": "نشطة",
+            "paused": "متوقفة",
+            "completed": "مكتملة"
+        },
+        "actions": {
+            "analyze": "تحليل",
+            "view": "عرض"
+        },
+        "tabs": {
+            "active": "الحملات النشطة",
+            "topPerforming": "الأفضل أداءً",
+            "paused": "متوقفة / غير نشطة"
+        },
+        "topPerformer": "الأفضل أداءً",
+        "topPerformerReason": "سبب التميز",
+        "highestRoas": "أعلى عائد على الإنفاق",
+        "lowestCpa": "أقل تكلفة تحويل",
+        "bestEfficiency": "أفضل كفاءة إنفاق",
+        "noActiveCampaigns": "لا توجد حملات نشطة",
+        "noPausedCampaigns": "لا توجد حملات متوقفة",
+        "noTopPerformer": "لا توجد حملة متميزة",
+        "adSquadTabs": {
+            "active": "مجموعات الإعلانات النشطة",
+            "topPerforming": "الأفضل أداءً",
+            "paused": "متوقفة / غير نشطة"
+        },
+        "noActiveAdSquads": "لا توجد مجموعات إعلانات نشطة",
+        "noPausedAdSquads": "لا توجد مجموعات إعلانات متوقفة",
+        "noTopAdSquad": "لا توجد مجموعة إعلانات متميزة",
+        "adTabs": {
+            "active": "الإعلانات النشطة",
+            "topPerforming": "الأفضل أداءً",
+            "paused": "متوقفة / غير نشطة"
+        },
+        "noActiveAds": "لا توجد إعلانات نشطة",
+        "noPausedAds": "لا توجد إعلانات متوقفة",
+        "noTopAd": "لا يوجد إعلان متميز",
+        "spend": "الإنفاق",
+        "purchases": "المشتريات",
+        "roas": "عائد الإنفاق الإعلاني",
+        "noData": "لا توجد بيانات",
+        "mediaPreview": "معاينة الإعلان",
+        "clickToPlay": "انقر للتشغيل",
+        "loadingMedia": "جاري تحميل المعاينة..."
+    },
+    "common": {
+        "loading": "جاري التحميل...",
+        "error": "حدث خطأ",
+        "success": "تمت العملية بنجاح",
+        "confirm": "تأكيد",
+        "cancel": "إلغاء",
+        "save": "حفظ",
+        "delete": "حذف",
+        "edit": "تعديل",
+        "view": "عرض",
+        "search": "بحث",
+        "filter": "فلتر",
+        "actions": "الإجراءات",
+        "back": "رجوع"
+    },
+    "reports": {
+        "adPerformance": "أداء الإعلان",
+        "noData": "لا توجد بيانات",
+        "purchases": "المشتريات",
+        "roas": "العائد على الإنفاق الإعلاني",
+        "returnOnAdSpend": "عائد الإنفاق الإعلاني",
+        "costPerPurchase": "تكلفة الشراء",
+        "averageCPP": "متوسط تكلفة الشراء",
+        "impressions": "مرات الظهور",
+        "ctr": "معدل النقر",
+        "cpm": "تكلفة الألف ظهور",
+        "conversionFunnel": "قمع التحويل",
+        "checkoutsInitiated": "بدء عملية الدفع",
+        "paymentInfoAdded": "إضافة بيانات الدفع",
+        "detailedMetrics": "المقاييس التفصيلية",
+        "totalSpend": "إجمالي الإنفاق",
+        "purchaseValue": "قيمة المشتريات",
+        "granularity": {
+            "label": "العرض",
+            "total": "الإجمالي",
+            "day": "يومي",
+            "hour": "ساعي"
+        },
+        "dateRange": {
+            "label": "الفترة",
+            "today": "اليوم",
+            "yesterday": "الأمس",
+            "last7Days": "آخر 7 أيام",
+            "last30Days": "آخر 30 يوماً",
+            "custom": "مخصص",
+            "startDate": "تاريخ البداية",
+            "endDate": "تاريخ النهاية"
+        },
+        "charts": {
+            "noData": "لا توجد بيانات للفترة المحددة",
+            "trend": "الاتجاه"
+        },
+        "askAI": "اسأل الذكاء الاصطناعي",
+        "analyzeMedia": "تحليل الوسائط",
+        "aiAnalysis": "تحليل الذكاء الاصطناعي",
+        "aiError": "فشل في الحصول على تحليل الذكاء الاصطناعي. الرجاء المحاولة مرة أخرى."
+    },
+    "sorting": {
+        "sortBy": "ترتيب حسب",
+        "filterBy": "فلترة",
+        "roas": "عائد الإنفاق",
+        "purchases": "المشتريات",
+        "costPerPurchase": "تكلفة/شراء",
+        "spend": "الإنفاق",
+        "cpc": "تكلفة النقرة",
+        "impressions": "الظهور",
+        "greaterThan": "أكبر من",
+        "lessThan": "أقل من",
+        "equals": "يساوي",
+        "clearFilter": "مسح",
+        "applyFilter": "تطبيق"
+    },
+    "footer": {
+        "copyright": "© 2025 Cyiper Devcode - جميع الحقوق محفوظة",
+        "createdBy": "تم التطوير بواسطة",
+        "cyiperDevcode": "Cyiper Devcode",
+        "for": "لـ",
+        "tashweesh": "تشويش"
+    }
+}

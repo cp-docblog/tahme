@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دعوة للانضمام إلى تشويش</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            direction: rtl;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%);
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .logo-text {
+            font-size: 32px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+        
+        .header h1 {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .greeting {
+            font-size: 20px;
+            color: #1f2937;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .message {
+            color: #4b5563;
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+        
+        .role-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%);
+            color: #ffffff;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            padding: 16px 40px;
+            background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 18px;
+            margin: 20px 0;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(45, 212, 191, 0.4);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(45, 212, 191, 0.5);
+        }
+        
+        .info-box {
+            background: #f0fdfa;
+            border-right: 4px solid #14b8a6;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .info-box h3 {
+            color: #0f766e;
+            font-size: 16px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .info-box p {
+            color: #115e59;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .footer {
+            background: #f9fafb;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .footer p {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        
+        .footer a {
+            color: #14b8a6;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .social-links {
+            margin-top: 20px;
+        }
+        
+        .social-links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .divider {
+            height: 1px;
+            background: linear-gradient(to left, transparent, #e5e7eb, transparent);
+            margin: 30px 0;
+        }
+        
+        @media only screen and (max-width: 600px) {
+            body {
+                padding: 20px 10px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .cta-button {
+                display: block;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <span class="logo-text">ت</span>
+            </div>
+            <h1>مرحباً بك في تشويش!</h1>
+            <p>منصة إدارة وتحليل الحملات التسويقية</p>
+        </div>
+        
+        <div class="content">
+            <p class="greeting">مرحباً {{ .Email }},</p>
+            
+            <p class="message">
+                تمت دعوتك للانضمام إلى فريق <strong>تشويش</strong> لإدارة الحملات التسويقية.
+                تم منحك صلاحيات <span class="role-badge">{{ .Role }}</span> للوصول إلى المنصة.
+            </p>
+            
+            <div style="text-align: center;">
+                <a href="{{ .ConfirmationURL }}" class="cta-button">
+                    تفعيل الحساب وإنشاء كلمة المرور
+                </a>
+            </div>
+            
+            <div class="info-box">
+                <h3>📋 ما يمكنك القيام به:</h3>
+                <p>
+                    • إدارة العملاء والحملات التسويقية<br>
+                    • تحليل أداء الحملات على المنصات المختلفة<br>
+                    • التعاون مع فريق العمل<br>
+                    • الوصول إلى لوحة التحكم الشاملة
+                </p>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <p class="message" style="font-size: 14px; color: #6b7280;">
+                <strong>ملاحظة:</strong> هذا الرابط صالح لمدة 24 ساعة فقط. إذا انتهت صلاحيته، يرجى التواصل مع المسؤول لإرسال دعوة جديدة.
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>
+                هل تحتاج إلى مساعدة؟ 
+                <a href="mailto:support@tashweesh.com">تواصل معنا</a>
+            </p>
+            <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">
+                © 2024 تشويش - جميع الحقوق محفوظة
+            </p>
+            <p style="font-size: 12px; color: #9ca3af;">
+                إذا لم تطلب هذه الدعوة، يمكنك تجاهل هذا البريد الإلكتروني بأمان.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

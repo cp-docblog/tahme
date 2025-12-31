@@ -1,0 +1,53 @@
+.layout {
+    display: flex;
+    min-height: 100vh;
+    background: var(--color-bg);
+}
+
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Add margin for sidebar on desktop */
+[dir="rtl"] .content {
+    margin-right: 280px;
+}
+
+[dir="ltr"] .content {
+    margin-left: 280px;
+}
+
+.main {
+    flex: 1;
+    padding: var(--spacing-xl);
+    animation: fadeIn 0.3s ease-in-out;
+    overflow-y: auto;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+
+    /* Remove margin on mobile */
+    [dir="rtl"] .content,
+    [dir="ltr"] .content {
+        margin: 0;
+    }
+
+    .main {
+        padding: var(--spacing-md);
+    }
+}

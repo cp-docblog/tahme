@@ -1,0 +1,285 @@
+{
+    "app": {
+        "name": "Tashweesh",
+        "tagline": "Campaign Management System",
+        "version": "Version 1.0.0"
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "users": "User Management",
+        "clients": "Client Management",
+        "campaigns": "Campaign Analysis"
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "subtitle": "Welcome to the Campaign Management System",
+        "stats": {
+            "totalClients": "Total Clients",
+            "activeCampaigns": "Active Campaigns",
+            "users": "Users",
+            "completedAnalyses": "Completed Analyses"
+        },
+        "recentActivity": "Recent Activity",
+        "activities": {
+            "newClient": "New client added: {{name}}",
+            "campaignComplete": "{{platform}} campaign analysis completed for {{client}}",
+            "newUser": "New user added: {{name}}",
+            "time": {
+                "hoursAgo": "{{count}} hour ago",
+                "hoursAgo_plural": "{{count}} hours ago",
+                "daysAgo": "{{count}} day ago",
+                "daysAgo_plural": "{{count}} days ago"
+            }
+        }
+    },
+    "users": {
+        "title": "User Management",
+        "subtitle": "Manage team members and permissions",
+        "addUser": "Add User",
+        "search": "Search for user...",
+        "table": {
+            "name": "Name",
+            "email": "Email",
+            "role": "Role",
+            "joinDate": "Join Date",
+            "actions": "Actions"
+        },
+        "roles": {
+            "owner": "Owner",
+            "admin": "Admin",
+            "staff": "Staff"
+        },
+        "actions": {
+            "edit": "Edit",
+            "delete": "Delete"
+        }
+    },
+    "clients": {
+        "title": "Client Management",
+        "subtitle": "Manage client database",
+        "addClient": "Add New Client",
+        "search": "Search for client...",
+        "table": {
+            "name": "Client Name",
+            "contact": "Contact",
+            "platforms": "Platforms",
+            "campaigns": "Campaigns",
+            "actions": "Actions"
+        },
+        "actions": {
+            "view": "View",
+            "edit": "Edit",
+            "delete": "Delete"
+        },
+        "integrations": {
+            "title": "Integrations",
+            "available": "Available",
+            "comingSoon": "Coming Soon",
+            "connect": "Connect",
+            "snapchatDescription": "Connect your Snapchat Ads account to manage and analyze your campaigns directly from the dashboard.",
+            "tiktokDescription": "TikTok Ads integration coming soon. Stay tuned for updates!",
+            "facebookDescription": "Facebook Ads integration coming soon. Stay tuned for updates!"
+        }
+    },
+    "newClient": {
+        "title": "Add New Client",
+        "subtitle": "Enter client information and platform credentials",
+        "sections": {
+            "basic": "Basic Information",
+            "contact": "Contact Information",
+            "platforms": "Platform Credentials"
+        },
+        "fields": {
+            "clientName": "Client Name",
+            "clickupFolder": "ClickUp Folder",
+            "contactName": "Contact Name",
+            "contactEmail": "Email",
+            "contactPhone": "Phone Number",
+            "tiktokUsername": "TikTok Username",
+            "tiktokPassword": "TikTok Password",
+            "snapchatUsername": "Snapchat Username",
+            "snapchatPassword": "Snapchat Password",
+            "snapchatAccountId": "Snapchat Account ID",
+            "snapchatAccountName": "Snapchat Account Name",
+            "adAccount": "Ad Account",
+            "facebookUsername": "Facebook Username",
+            "facebookPassword": "Facebook Password"
+        },
+        "actions": {
+            "save": "Save Client",
+            "cancel": "Cancel"
+        },
+        "selectAdAccount": "Select an ad account",
+        "adAccountStatus": {
+            "active": "Active",
+            "inactive": "Inactive"
+        },
+        "comingSoon": "Coming Soon"
+    },
+    "campaigns": {
+        "title": "Campaign Analysis",
+        "subtitle": "Track and analyze marketing campaign performance",
+        "selectClient": "Select a client",
+        "selectPlatform": "Select Platform",
+        "campaignsFor": "Campaigns for",
+        "adSquadsInCampaign": "Ad Squads in Campaign",
+        "adsInAdSquad": "Ads in Ad Squad",
+        "noCampaigns": "No campaigns found",
+        "noAdSquads": "No ad squads found",
+        "noAds": "No ads found",
+        "noClients": "No clients found",
+        "addClientFirst": "Please add a client first",
+        "totalCampaigns": "Total Campaigns",
+        "activeCampaigns": "Active Campaigns",
+        "totalAdSquads": "Total Ad Squads",
+        "activeAdSquads": "Active Ad Squads",
+        "totalAds": "Total Ads",
+        "activeAds": "Active Ads",
+        "approved": "Approved",
+        "objective": "Objective",
+        "dailyBudget": "Daily Budget",
+        "bid": "Bid",
+        "goal": "Goal",
+        "delivery": "Delivery",
+        "addCampaign": "Add Campaign",
+        "search": "Search for campaign...",
+        "filters": "Filters",
+        "table": {
+            "name": "Campaign Name",
+            "client": "Client",
+            "platform": "Platform",
+            "status": "Status",
+            "performance": "Performance",
+            "actions": "Actions"
+        },
+        "platforms": {
+            "tiktok": "TikTok",
+            "snapchat": "Snapchat",
+            "facebook": "Facebook"
+        },
+        "status": {
+            "active": "Active",
+            "paused": "Paused",
+            "completed": "Completed"
+        },
+        "actions": {
+            "analyze": "Analyze",
+            "view": "View"
+        },
+        "tabs": {
+            "active": "Active Campaigns",
+            "topPerforming": "Top Performing",
+            "paused": "Paused / Inactive"
+        },
+        "topPerformer": "Top Performer",
+        "topPerformerReason": "Why Top",
+        "highestRoas": "Highest ROAS",
+        "lowestCpa": "Lowest CPA",
+        "bestEfficiency": "Best Spend Efficiency",
+        "noActiveCampaigns": "No active campaigns found",
+        "noPausedCampaigns": "No paused campaigns found",
+        "noTopPerformer": "No top performing campaign available",
+        "adSquadTabs": {
+            "active": "Active Ad Squads",
+            "topPerforming": "Top Performing",
+            "paused": "Paused / Inactive"
+        },
+        "noActiveAdSquads": "No active ad squads found",
+        "noPausedAdSquads": "No paused ad squads found",
+        "noTopAdSquad": "No top performing ad squad available",
+        "adTabs": {
+            "active": "Active Ads",
+            "topPerforming": "Top Performing",
+            "paused": "Paused / Inactive"
+        },
+        "noActiveAds": "No active ads found",
+        "noPausedAds": "No paused ads found",
+        "noTopAd": "No top performing ad available",
+        "spend": "Spend",
+        "purchases": "Purchases",
+        "roas": "ROAS",
+        "noData": "No data available",
+        "mediaPreview": "Ad Preview",
+        "clickToPlay": "Click to play",
+        "loadingMedia": "Loading preview..."
+    },
+    "common": {
+        "loading": "Loading...",
+        "error": "An error occurred",
+        "success": "Operation completed successfully",
+        "confirm": "Confirm",
+        "cancel": "Cancel",
+        "save": "Save",
+        "delete": "Delete",
+        "edit": "Edit",
+        "view": "View",
+        "search": "Search",
+        "filter": "Filter",
+        "actions": "Actions",
+        "back": "Back"
+    },
+    "reports": {
+        "adPerformance": "Ad Performance",
+        "noData": "No data available",
+        "purchases": "Purchases",
+        "roas": "ROAS",
+        "returnOnAdSpend": "Return on Ad Spend",
+        "costPerPurchase": "Cost per Purchase",
+        "averageCPP": "Average CPP",
+        "impressions": "Impressions",
+        "ctr": "CTR",
+        "cpm": "CPM",
+        "conversionFunnel": "Conversion Funnel",
+        "checkoutsInitiated": "Checkouts Initiated",
+        "paymentInfoAdded": "Payment Info Added",
+        "detailedMetrics": "Detailed Metrics",
+        "totalSpend": "Total Spend",
+        "purchaseValue": "Purchase Value",
+        "granularity": {
+            "label": "View",
+            "total": "Total",
+            "day": "Daily",
+            "hour": "Hourly"
+        },
+        "dateRange": {
+            "label": "Period",
+            "today": "Today",
+            "yesterday": "Yesterday",
+            "last7Days": "Last 7 Days",
+            "last30Days": "Last 30 Days",
+            "custom": "Custom",
+            "startDate": "Start Date",
+            "endDate": "End Date"
+        },
+        "charts": {
+            "noData": "No data available for selected period",
+            "trend": "Trend"
+        },
+        "askAI": "Ask AI",
+        "analyzeMedia": "Analyze Media",
+        "aiAnalysis": "AI Analysis",
+        "aiError": "Failed to get AI analysis. Please try again."
+    },
+    "sorting": {
+        "sortBy": "Sort by",
+        "filterBy": "Filter",
+        "roas": "ROAS",
+        "purchases": "Purchases",
+        "costPerPurchase": "Cost/Purchase",
+        "spend": "Spend",
+        "cpc": "CPC",
+        "impressions": "Impressions",
+        "greaterThan": "Greater than",
+        "lessThan": "Less than",
+        "equals": "Equals",
+        "clearFilter": "Clear",
+        "applyFilter": "Apply"
+    },
+    "footer": {
+        "copyright": "© 2025 Cyiper Devcode - All Rights Reserved",
+        "createdBy": "Created by",
+        "cyiperDevcode": "Cyiper Devcode",
+        "for": "for",
+        "tashweesh": "Tashweesh"
+    }
+}

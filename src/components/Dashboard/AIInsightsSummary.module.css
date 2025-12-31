@@ -1,0 +1,304 @@
+.container {
+    background: linear-gradient(135deg, rgba(0, 195, 251, 0.05) 0%, rgba(0, 195, 251, 0.02) 100%);
+    border: 1px solid rgba(0, 195, 251, 0.2);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.aiIcon {
+    color: var(--color-primary);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.sentimentUp {
+    color: var(--color-success);
+}
+
+.sentimentDown {
+    color: var(--color-error);
+}
+
+.summary {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--color-text);
+    margin: 0 0 24px 0;
+    padding: 16px;
+    background: var(--color-surface);
+    border-left: 3px solid var(--color-primary);
+    border-radius: 8px;
+}
+
+.section {
+    margin-top: 24px;
+}
+
+.sectionTitle {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-text-secondary);
+    margin: 0 0 12px 0;
+}
+
+.insights {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.insight {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: var(--color-surface);
+    border-radius: 8px;
+    border-left: 3px solid transparent;
+}
+
+.insight.positive {
+    border-left-color: var(--color-success);
+}
+
+.insight.negative {
+    border-left-color: var(--color-error);
+}
+
+.insight.neutral {
+    border-left-color: var(--color-info);
+}
+
+.insightIcon {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.positive .insightIcon {
+    color: var(--color-success);
+}
+
+.negative .insightIcon {
+    color: var(--color-error);
+}
+
+.neutral .insightIcon {
+    color: var(--color-info);
+}
+
+.insightContent {
+    flex: 1;
+}
+
+.insightTitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 4px;
+}
+
+.insightDescription {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.actionable {
+    margin: 8px 0 0 0;
+    font-size: 13px;
+    color: var(--color-primary);
+    font-style: italic;
+}
+
+.impactBadge {
+    flex-shrink: 0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.impactHigh {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-error);
+}
+
+.impactMedium {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--color-warning);
+}
+
+.impactLow {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--color-info);
+}
+
+.recommendations {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.recommendation {
+    padding: 16px;
+    background: var(--color-surface);
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+}
+
+.recHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.priority {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.priorityHigh {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-error);
+}
+
+.priorityMedium {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--color-warning);
+}
+
+.priorityLow {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--color-info);
+}
+
+.recAction {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.recReason {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin: 0 0 8px 0;
+    line-height: 1.5;
+}
+
+.recClient {
+    display: inline-block;
+    font-size: 12px;
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.recImpact {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-border);
+}
+
+.impactText {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.footer {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border);
+    text-align: center;
+}
+
+.confidence {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    gap: 12px;
+    color: var(--color-text-secondary);
+}
+
+.loadingIcon {
+    color: var(--color-primary);
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Dark mode */
+[data-theme="dark"] .container {
+    background: linear-gradient(135deg, rgba(0, 195, 251, 0.08) 0%, rgba(0, 195, 251, 0.03) 100%);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .summary {
+        font-size: 14px;
+        padding: 12px;
+    }
+
+    .insight,
+    .recommendation {
+        padding: 12px;
+    }
+
+    .recHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}

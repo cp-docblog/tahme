@@ -1,0 +1,186 @@
+.container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.card {
+    height: 100%;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.successIcon {
+    color: var(--color-success);
+}
+
+.warningIcon {
+    color: var(--color-warning);
+}
+
+.insightsList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.insight {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: var(--color-bg-secondary);
+    border-radius: 8px;
+    border-left: 3px solid var(--color-success);
+    transition: all 0.2s ease;
+}
+
+.insight:hover {
+    background: var(--color-surface-hover);
+}
+
+.insight.warning {
+    border-left-color: var(--color-warning);
+}
+
+.insightIcon {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--color-success);
+}
+
+.insight.warning .insightIcon {
+    color: var(--color-warning);
+}
+
+.insightContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.insightMessage {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text);
+    line-height: 1.5;
+}
+
+.recommendation {
+    margin: 0;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.4;
+    font-style: italic;
+}
+
+.insightMeta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.client {
+    font-weight: 600;
+}
+
+.separator {
+    color: var(--color-border);
+}
+
+.campaign {
+    font-style: italic;
+}
+
+.metricBadge {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(16, 185, 129, 0.1);
+    border-radius: 8px;
+    min-width: 60px;
+}
+
+.metricBadge.warningBadge {
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.metricValue {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-success);
+    line-height: 1;
+}
+
+.warningBadge .metricValue {
+    color: var(--color-warning);
+}
+
+.metricLabel {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    margin-top: 4px;
+}
+
+.empty {
+    padding: 32px;
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+}
+
+/* Dark mode */
+[data-theme="dark"] .insight {
+    background: var(--color-surface);
+}
+
+[data-theme="dark"] .metricBadge {
+    background: rgba(16, 185, 129, 0.15);
+}
+
+[data-theme="dark"] .metricBadge.warningBadge {
+    background: rgba(245, 158, 11, 0.15);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .insight {
+        padding: 12px;
+    }
+
+    .metricBadge {
+        min-width: 50px;
+        padding: 6px 8px;
+    }
+
+    .metricValue {
+        font-size: 16px;
+    }
+}

@@ -1,0 +1,201 @@
+.campaigns {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-2xl);
+    animation: slideUp 0.5s ease-out;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-md);
+    font-size: 0.875rem;
+}
+
+.breadcrumbHome {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xs);
+    background: transparent;
+    border: none;
+    color: var(--color-primary);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.breadcrumbHome:hover {
+    background: var(--color-primary-alpha);
+}
+
+.breadcrumbSeparator {
+    color: var(--color-text-secondary);
+}
+
+[dir="rtl"] .breadcrumbSeparator {
+    transform: rotate(180deg);
+}
+
+.breadcrumbItem {
+    color: var(--color-text-secondary);
+    cursor: default;
+}
+
+.breadcrumbActive {
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.title {
+    font-size: 2.5rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: var(--spacing-sm);
+}
+
+.subtitle {
+    color: var(--color-text-secondary);
+    font-size: 1.125rem;
+}
+
+.loading {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    color: var(--color-text-secondary);
+    font-size: 1.125rem;
+}
+
+.emptyState {
+    text-align: center;
+    padding: calc(var(--spacing-2xl) * 2);
+}
+
+.emptyIcon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-lg);
+}
+
+.emptyTitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-text);
+}
+
+.emptyText {
+    color: var(--color-text-secondary);
+}
+
+.campaignsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.campaignCard {
+    position: relative;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    animation: slideUp 0.5s ease-out;
+    animation-fill-mode: both;
+}
+
+.campaignCard.selected {
+    border-color: var(--color-primary);
+    background: linear-gradient(135deg, var(--color-primary-alpha) 0%, transparent 100%);
+    box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.campaignH.header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+@media (min-width: 769px) {
+    .header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+.platformIcon {
+    font-size: 2.5rem;
+}
+
+.checkbox {
+    display: flex;
+    align-items: center;
+}
+
+.checkboxInput {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    accent-color: var(--color-primary);
+}
+
+.campaignName {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text);
+}
+
+.campaignMeta {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+.statusBadge {
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.platform {
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    background: var(--color-bg);
+    color: var(--color-text-secondary);
+    text-transform: capitalize;
+}
+
+.campaignFooter {
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--color-border);
+}
+
+.campaignDate {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
