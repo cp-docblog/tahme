@@ -108,7 +108,7 @@ export const Login: React.FC = () => {
 
                 <div className={styles.footer}>
                     <p className={styles.footerText}>
-                        © 2025 Cyiper Devcode - جميع الحقوق محفوظة
+                        © 2026 Cyiper Devcode
                     </p>
                 </div>
             </div>

@@ -10,15 +10,20 @@ interface DateRangePickerProps {
 
 export const DateRangePicker: React.FC<DateRangePickerProps> = ({ value, onChange }) => {
     const { t } = useTranslation();
-    const [isCustomMode, setIsCustomMode] = React.useState(false);
+    // Use a ref to track custom mode - this persists across re-renders without triggering new renders
+    const isCustomModeRef = React.useRef(false);
+    // State to force re-render when custom mode changes
+    const [, forceUpdate] = React.useReducer(x => x + 1, 0);
 
     // Derive the selected preset from the actual date range value
     const getPresetFromDateRange = (range: DateRange): DateRangePreset => {
-        // If we're in custom mode, stay in custom
-        if (isCustomMode) {
+        // If we're in custom mode, always stay in custom
+        // This prevents the picker from resetting when user is selecting dates
+        if (isCustomModeRef.current) {
             return 'custom';
         }
 
+        // When not in custom mode and no dates are set, default to last30days
         if (!range.start || !range.end) {
             return 'last30days';
         }
@@ -51,7 +56,8 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ value, onChang
 
         // Track when user switches to custom mode
         if (presetKey === 'custom') {
-            setIsCustomMode(true);
+            isCustomModeRef.current = true;
+            forceUpdate(); // Trigger re-render to show custom date inputs
             // Keep current dates if they exist, otherwise set to null
             if (!value.start || !value.end) {
                 onChange({ start: null, end: null });
@@ -60,7 +66,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ value, onChang
         }
 
         // User selected a preset, exit custom mode
-        setIsCustomMode(false);
+        isCustomModeRef.current = false;
         const preset = DATE_RANGE_PRESETS.find(p => p.key === presetKey);
         if (preset) {
             onChange(preset.getDates());

@@ -35,19 +35,32 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
     const [aiLoading, setAILoading] = useState(false);
     const [aiError, setAIError] = useState<string | null>(null);
 
-    // Media Preview State
-    const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+    // Media Preview State - stores { link: string, isVideo: boolean }
+    const [mediaPreview, setMediaPreview] = useState<{ link: string; isVideo: boolean } | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [mediaLoading, setMediaLoading] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const lastFetchedAdIdRef = useRef<string | null>(null);
 
+    // Fetch report data when dependencies change
     useEffect(() => {
         fetchReport();
-        fetchMediaPreview();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [adId, granularity, dateRange.start, dateRange.end]);
 
-    const fetchMediaPreview = async () => {
+    // Fetch media preview only when adId changes - separate from report to avoid duplicate fetches
+    useEffect(() => {
+        // Skip if already fetched for this adId
+        if (lastFetchedAdIdRef.current === adId) return;
+
+        const abortController = new AbortController();
+        fetchMediaPreview(abortController.signal);
+
+        return () => abortController.abort();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [adId]);
+
+    const fetchMediaPreview = async (signal?: AbortSignal) => {
         setMediaLoading(true);
         try {
             const webhookUrl = process.env.REACT_APP_BACKEND_WEBHOOK;
@@ -56,19 +69,30 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
             const response = await fetch(`${webhookUrl}/tash-snap-media`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ad_id: adId })
+                body: JSON.stringify({ ad_id: adId }),
+                signal
             });
 
             if (response.ok) {
                 const data = await response.json();
                 if (Array.isArray(data) && data.length > 0 && data[0].link) {
-                    setMediaPreview(data[0].link);
+                    if (!signal?.aborted) {
+                        const link = data[0].link;
+                        // Detect if it's an image based on URL pattern
+                        const isVideo = !link.includes('image_preview');
+                        setMediaPreview({ link, isVideo });
+                        lastFetchedAdIdRef.current = adId;
+                    }
                 }
             }
         } catch (err) {
+            // Ignore abort errors - they're expected when dependencies change
+            if (err instanceof Error && err.name === 'AbortError') return;
             console.error('Error fetching media preview:', err);
         } finally {
-            setMediaLoading(false);
+            if (!signal?.aborted) {
+                setMediaLoading(false);
+            }
         }
     };
 
@@ -400,27 +424,202 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
     };
 
 
-    if (loading) {
-        return (
-            <div className={styles.loadingState}>
-                <div className={styles.spinner}></div>
-                <p>{t('common.loading')}</p>
-            </div>
-        );
-    }
-
-    if (error || !stats) {
-        return (
-            <div className={styles.errorState}>
-                <p>{error || t('reports.noData')}</p>
-            </div>
-        );
-    }
-
     const roas = calculateROAS();
     const cpp = calculateCPP();
     const cpm = calculateCPM();
     const ctr = calculateCTR();
+
+    // Render loading, error, or content based on state
+    const renderContent = () => {
+        if (loading) {
+            return (
+                <div className={styles.loadingState}>
+                    <div className={styles.spinner}></div>
+                    <p>{t('common.loading')}</p>
+                </div>
+            );
+        }
+
+        if (error || !stats) {
+            return (
+                <div className={styles.errorState}>
+                    <p>{error || t('reports.noData')}</p>
+                </div>
+            );
+        }
+
+        return (
+            <>
+                {/* Media Preview Section */}
+                <Card className={styles.mediaSection}>
+                    <h3 className={styles.sectionTitle}>{t('campaigns.mediaPreview')}</h3>
+                    <div className={styles.mediaContainer}>
+                        {mediaLoading ? (
+                            <div className={styles.mediaSkeleton}>
+                                <div className={styles.skeletonPulse}></div>
+                            </div>
+                        ) : mediaPreview ? (
+                            mediaPreview.isVideo ? (
+                                <div
+                                    className={`${styles.mediaPlayer} ${isPlaying ? styles.playing : ''}`}
+                                    onClick={!isPlaying ? handlePlayClick : undefined}
+                                >
+                                    <video
+                                        ref={videoRef}
+                                        src={mediaPreview.link}
+                                        controls={isPlaying}
+                                        muted={!isPlaying}
+                                        preload="metadata"
+                                        className={styles.videoElement}
+                                    />
+                                    {!isPlaying && (
+                                        <div className={styles.playOverlay}>
+                                            <div className={styles.playButton}>
+                                                <Play size={48} />
+                                            </div>
+                                            <span className={styles.clickToPlay}>{t('campaigns.clickToPlay')}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className={styles.mediaPlayer}>
+                                    <img
+                                        src={mediaPreview.link}
+                                        alt={adName}
+                                        className={styles.videoElement}
+                                    />
+                                </div>
+                            )
+                        ) : (
+                            <div className={styles.mediaPlaceholder}>
+                                <Eye size={48} />
+                                <span>{t('reports.noData')}</span>
+                            </div>
+                        )}
+                    </div>
+                </Card>
+
+                {/* Time Series Chart - Only show for DAY/HOUR */}
+                {granularity !== 'TOTAL' && timeseriesData.length > 0 && (
+                    <Card className={styles.section}>
+                        <h3 className={styles.sectionTitle}>{t('reports.charts.trend')}</h3>
+                        <TimeSeriesChart data={timeseriesData} granularity={granularity} />
+                    </Card>
+                )}
+
+                {/* Key Metrics Cards */}
+                <div className={styles.metricsGrid}>
+                    <Card className={styles.metricCard}>
+                        <div className={styles.metricIcon} style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
+                            <ShoppingCart size={24} style={{ color: 'var(--color-success)' }} />
+                        </div>
+                        <div className={styles.metricContent}>
+                            <div className={styles.metricLabel}>{t('reports.purchases')}</div>
+                            <div className={styles.metricValue}>{formatNumber(stats.conversion_purchases || 0)}</div>
+                            <div className={styles.metricSubtext}>
+                                {formatCurrency(stats.conversion_purchases_value || 0)}
+                            </div>
+                        </div>
+                    </Card>
+
+                    <Card className={styles.metricCard}>
+                        <div className={styles.metricIcon} style={{ backgroundColor: 'rgba(0, 195, 251, 0.1)' }}>
+                            <TrendingUp size={24} style={{ color: 'var(--color-primary)' }} />
+                        </div>
+                        <div className={styles.metricContent}>
+                            <div className={styles.metricLabel}>{t('reports.roas')}</div>
+                            <div className={styles.metricValue}>{roas.toFixed(2)}x</div>
+                            <div className={styles.metricSubtext}>{t('reports.returnOnAdSpend')}</div>
+                        </div>
+                    </Card>
+
+                    <Card className={styles.metricCard}>
+                        <div className={styles.metricIcon} style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
+                            <DollarSign size={24} style={{ color: 'var(--color-warning)' }} />
+                        </div>
+                        <div className={styles.metricContent}>
+                            <div className={styles.metricLabel}>{t('reports.costPerPurchase')}</div>
+                            <div className={styles.metricValue}>{formatCurrency(cpp)}</div>
+                            <div className={styles.metricSubtext}>{t('reports.averageCPP')}</div>
+                        </div>
+                    </Card>
+
+                    <Card className={styles.metricCard}>
+                        <div className={styles.metricIcon} style={{ backgroundColor: 'rgba(139, 92, 246, 0.1)' }}>
+                            <Eye size={24} style={{ color: '#8b5cf6' }} />
+                        </div>
+                        <div className={styles.metricContent}>
+                            <div className={styles.metricLabel}>{t('reports.impressions')}</div>
+                            <div className={styles.metricValue}>{formatNumber(stats.impressions || 0)}</div>
+                            <div className={styles.metricSubtext}>
+                                {t('reports.ctr')}: {formatPercentage(ctr)}
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+
+                {/* Conversion Funnel - Enhanced */}
+                <Card className={styles.section}>
+                    <h3 className={styles.sectionTitle}>{t('reports.conversionFunnel')}</h3>
+                    <ConversionFunnel
+                        impressions={stats.impressions || 0}
+                        checkouts={stats.conversion_start_checkout || 0}
+                        billingAdded={stats.conversion_add_billing || 0}
+                        purchases={stats.conversion_purchases || 0}
+                    />
+                </Card>
+
+                {/* Detailed Metrics Table */}
+                <Card className={styles.section}>
+                    <h3 className={styles.sectionTitle}>{t('reports.detailedMetrics')}</h3>
+                    <div className={styles.metricsTable}>
+                        <div className={styles.tableRow}>
+                            <div className={styles.tableLabel}>{t('reports.totalSpend')}</div>
+                            <div className={styles.tableValue}>{formatCurrency(stats.spend || 0)}</div>
+                        </div>
+                        <div className={styles.tableRow}>
+                            <div className={styles.tableLabel}>{t('reports.impressions')}</div>
+                            <div className={styles.tableValue}>{formatNumber(stats.impressions || 0)}</div>
+                        </div>
+                        <div className={styles.tableRow}>
+                            <div className={styles.tableLabel}>{t('reports.cpm')}</div>
+                            <div className={styles.tableValue}>{formatCurrency(cpm)}</div>
+                        </div>
+                        <div className={styles.tableRow}>
+                            <div className={styles.tableLabel}>{t('reports.ctr')}</div>
+                            <div className={styles.tableValue}>{formatPercentage(ctr)}</div>
+                        </div>
+                        <div className={styles.tableDivider}></div>
+                        <div className={styles.tableRow}>
+                            <div className={styles.tableLabel}>{t('reports.checkoutsInitiated')}</div>
+                            <div className={styles.tableValue}>{formatNumber(stats.conversion_start_checkout || 0)}</div>
+                        </div>
+                        <div className={styles.tableRow}>
+                            <div className={styles.tableLabel}>{t('reports.paymentInfoAdded')}</div>
+                            <div className={styles.tableValue}>{formatNumber(stats.conversion_add_billing || 0)}</div>
+                        </div>
+                        <div className={styles.tableRow}>
+                            <div className={styles.tableLabel}>{t('reports.purchases')}</div>
+                            <div className={styles.tableValue}>{formatNumber(stats.conversion_purchases || 0)}</div>
+                        </div>
+                        <div className={styles.tableRow}>
+                            <div className={styles.tableLabel}>{t('reports.purchaseValue')}</div>
+                            <div className={styles.tableValue}>{formatCurrency(stats.conversion_purchases_value || 0)}</div>
+                        </div>
+                        <div className={styles.tableDivider}></div>
+                        <div className={styles.tableRow}>
+                            <div className={styles.tableLabel}>{t('reports.costPerPurchase')}</div>
+                            <div className={styles.tableValue}>{formatCurrency(cpp)}</div>
+                        </div>
+                        <div className={styles.tableRow}>
+                            <div className={styles.tableLabel}>{t('reports.roas')}</div>
+                            <div className={styles.tableValue}>{roas.toFixed(2)}x</div>
+                        </div>
+                    </div>
+                </Card>
+            </>
+        );
+    };
 
     return (
         <div className={styles.adReport}>
@@ -430,14 +629,14 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
                     <p className={styles.adId}>Ad ID: {adId}</p>
                 </div>
 
-                {/* Controls Row - Simple and clean */}
+                {/* Controls Row - ALWAYS rendered to preserve DateRangePicker state */}
                 <div className={styles.controls}>
                     <DateRangePicker value={dateRange} onChange={setDateRange} />
                     <GranularitySelector value={granularity} onChange={setGranularity} />
                     <Button
                         variant="primary"
                         onClick={handleAskAI}
-                        disabled={!stats}
+                        disabled={!stats || loading}
                         style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                     >
                         <Sparkles size={18} />
@@ -446,7 +645,7 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
                     <Button
                         variant="secondary"
                         onClick={handleAnalyzeMedia}
-                        disabled={!mediaPreview}
+                        disabled={!mediaPreview || loading}
                         style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                     >
                         <Film size={18} />
@@ -455,164 +654,7 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
                 </div>
             </div>
 
-
-            {/* Media Preview Section */}
-            <Card className={styles.mediaSection}>
-                <h3 className={styles.sectionTitle}>{t('campaigns.mediaPreview')}</h3>
-                <div className={styles.mediaContainer}>
-                    {mediaLoading ? (
-                        <div className={styles.mediaSkeleton}>
-                            <div className={styles.skeletonPulse}></div>
-                        </div>
-                    ) : mediaPreview ? (
-                        <div
-                            className={`${styles.mediaPlayer} ${isPlaying ? styles.playing : ''}`}
-                            onClick={!isPlaying ? handlePlayClick : undefined}
-                        >
-                            <video
-                                ref={videoRef}
-                                src={mediaPreview}
-                                controls={isPlaying}
-                                muted={!isPlaying}
-                                preload="metadata"
-                                className={styles.videoElement}
-                            />
-                            {!isPlaying && (
-                                <div className={styles.playOverlay}>
-                                    <div className={styles.playButton}>
-                                        <Play size={48} />
-                                    </div>
-                                    <span className={styles.clickToPlay}>{t('campaigns.clickToPlay')}</span>
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        <div className={styles.mediaPlaceholder}>
-                            <Eye size={48} />
-                            <span>{t('reports.noData')}</span>
-                        </div>
-                    )}
-                </div>
-            </Card>
-
-            {/* Time Series Chart - Only show for DAY/HOUR */}
-            {granularity !== 'TOTAL' && timeseriesData.length > 0 && (
-                <Card className={styles.section}>
-                    <h3 className={styles.sectionTitle}>{t('reports.charts.trend')}</h3>
-                    <TimeSeriesChart data={timeseriesData} granularity={granularity} />
-                </Card>
-            )}
-
-            {/* Key Metrics Cards */}
-            <div className={styles.metricsGrid}>
-                <Card className={styles.metricCard}>
-                    <div className={styles.metricIcon} style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
-                        <ShoppingCart size={24} style={{ color: 'var(--color-success)' }} />
-                    </div>
-                    <div className={styles.metricContent}>
-                        <div className={styles.metricLabel}>{t('reports.purchases')}</div>
-                        <div className={styles.metricValue}>{formatNumber(stats.conversion_purchases || 0)}</div>
-                        <div className={styles.metricSubtext}>
-                            {formatCurrency(stats.conversion_purchases_value || 0)}
-                        </div>
-                    </div>
-                </Card>
-
-                <Card className={styles.metricCard}>
-                    <div className={styles.metricIcon} style={{ backgroundColor: 'rgba(0, 195, 251, 0.1)' }}>
-                        <TrendingUp size={24} style={{ color: 'var(--color-primary)' }} />
-                    </div>
-                    <div className={styles.metricContent}>
-                        <div className={styles.metricLabel}>{t('reports.roas')}</div>
-                        <div className={styles.metricValue}>{roas.toFixed(2)}x</div>
-                        <div className={styles.metricSubtext}>{t('reports.returnOnAdSpend')}</div>
-                    </div>
-                </Card>
-
-                <Card className={styles.metricCard}>
-                    <div className={styles.metricIcon} style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
-                        <DollarSign size={24} style={{ color: 'var(--color-warning)' }} />
-                    </div>
-                    <div className={styles.metricContent}>
-                        <div className={styles.metricLabel}>{t('reports.costPerPurchase')}</div>
-                        <div className={styles.metricValue}>{formatCurrency(cpp)}</div>
-                        <div className={styles.metricSubtext}>{t('reports.averageCPP')}</div>
-                    </div>
-                </Card>
-
-                <Card className={styles.metricCard}>
-                    <div className={styles.metricIcon} style={{ backgroundColor: 'rgba(139, 92, 246, 0.1)' }}>
-                        <Eye size={24} style={{ color: '#8b5cf6' }} />
-                    </div>
-                    <div className={styles.metricContent}>
-                        <div className={styles.metricLabel}>{t('reports.impressions')}</div>
-                        <div className={styles.metricValue}>{formatNumber(stats.impressions || 0)}</div>
-                        <div className={styles.metricSubtext}>
-                            {t('reports.ctr')}: {formatPercentage(ctr)}
-                        </div>
-                    </div>
-                </Card>
-            </div>
-
-            {/* Conversion Funnel - Enhanced */}
-            <Card className={styles.section}>
-                <h3 className={styles.sectionTitle}>{t('reports.conversionFunnel')}</h3>
-                <ConversionFunnel
-                    impressions={stats.impressions || 0}
-                    checkouts={stats.conversion_start_checkout || 0}
-                    billingAdded={stats.conversion_add_billing || 0}
-                    purchases={stats.conversion_purchases || 0}
-                />
-            </Card>
-
-            {/* Detailed Metrics Table */}
-            <Card className={styles.section}>
-                <h3 className={styles.sectionTitle}>{t('reports.detailedMetrics')}</h3>
-                <div className={styles.metricsTable}>
-                    <div className={styles.tableRow}>
-                        <div className={styles.tableLabel}>{t('reports.totalSpend')}</div>
-                        <div className={styles.tableValue}>{formatCurrency(stats.spend || 0)}</div>
-                    </div>
-                    <div className={styles.tableRow}>
-                        <div className={styles.tableLabel}>{t('reports.impressions')}</div>
-                        <div className={styles.tableValue}>{formatNumber(stats.impressions || 0)}</div>
-                    </div>
-                    <div className={styles.tableRow}>
-                        <div className={styles.tableLabel}>{t('reports.cpm')}</div>
-                        <div className={styles.tableValue}>{formatCurrency(cpm)}</div>
-                    </div>
-                    <div className={styles.tableRow}>
-                        <div className={styles.tableLabel}>{t('reports.ctr')}</div>
-                        <div className={styles.tableValue}>{formatPercentage(ctr)}</div>
-                    </div>
-                    <div className={styles.tableDivider}></div>
-                    <div className={styles.tableRow}>
-                        <div className={styles.tableLabel}>{t('reports.checkoutsInitiated')}</div>
-                        <div className={styles.tableValue}>{formatNumber(stats.conversion_start_checkout || 0)}</div>
-                    </div>
-                    <div className={styles.tableRow}>
-                        <div className={styles.tableLabel}>{t('reports.paymentInfoAdded')}</div>
-                        <div className={styles.tableValue}>{formatNumber(stats.conversion_add_billing || 0)}</div>
-                    </div>
-                    <div className={styles.tableRow}>
-                        <div className={styles.tableLabel}>{t('reports.purchases')}</div>
-                        <div className={styles.tableValue}>{formatNumber(stats.conversion_purchases || 0)}</div>
-                    </div>
-                    <div className={styles.tableRow}>
-                        <div className={styles.tableLabel}>{t('reports.purchaseValue')}</div>
-                        <div className={styles.tableValue}>{formatCurrency(stats.conversion_purchases_value || 0)}</div>
-                    </div>
-                    <div className={styles.tableDivider}></div>
-                    <div className={styles.tableRow}>
-                        <div className={styles.tableLabel}>{t('reports.costPerPurchase')}</div>
-                        <div className={styles.tableValue}>{formatCurrency(cpp)}</div>
-                    </div>
-                    <div className={styles.tableRow}>
-                        <div className={styles.tableLabel}>{t('reports.roas')}</div>
-                        <div className={styles.tableValue}>{roas.toFixed(2)}x</div>
-                    </div>
-                </div>
-            </Card>
+            {renderContent()}
 
             {/* AI Report Modal */}
             <AIReportModal

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Image, Film, CheckCircle, Award, Sparkles, Play } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Card } from '../UI/Card';
@@ -39,9 +39,10 @@ export const AdsList: React.FC<AdsListProps> = ({ adAccountId, adsquadId, onSele
     const [sortBy, setSortBy] = useState<SortMetric>('roas');
     const [filter, setFilter] = useState<FilterState | null>(null);
 
-    // Media preview state
-    const [mediaPreviews, setMediaPreviews] = useState<Map<string, string>>(new Map());
+    // Media preview state - stores { link: string, isVideo: boolean }
+    const [mediaPreviews, setMediaPreviews] = useState<Map<string, { link: string; isVideo: boolean }>>(new Map());
     const [mediaLoading, setMediaLoading] = useState(false);
+    const isFetchingMediaRef = useRef(false);
 
     // AI Modal state
     const [isAIModalOpen, setIsAIModalOpen] = useState(false);
@@ -49,15 +50,18 @@ export const AdsList: React.FC<AdsListProps> = ({ adAccountId, adsquadId, onSele
     const [aiError, setAIError] = useState<string | null>(null);
     const [aiOutput, setAIOutput] = useState<string | null>(null);
 
+
     useEffect(() => {
+        setMediaPreviews(new Map());
+        isFetchingMediaRef.current = false;
         fetchAds();
         fetchPerformanceStats();
     }, [adsquadId, dateRange.start, dateRange.end]);
 
     // Fetch media previews when ads change
     useEffect(() => {
-        if (ads.length > 0) {
-            fetchMediaPreviews();
+        if (ads.length > 0 && !isFetchingMediaRef.current) {
+            fetchMediaPreviews(ads);
         }
     }, [ads]);
 
@@ -107,16 +111,18 @@ export const AdsList: React.FC<AdsListProps> = ({ adAccountId, adsquadId, onSele
         }
     };
 
-    const fetchMediaPreviews = async () => {
+    const fetchMediaPreviews = async (adsList: Ad[]) => {
+        if (adsList.length === 0 || isFetchingMediaRef.current) return;
+
+        isFetchingMediaRef.current = true;
         setMediaLoading(true);
+
         try {
             const webhookUrl = process.env.REACT_APP_BACKEND_WEBHOOK;
             if (!webhookUrl) return;
 
-            const previewMap = new Map<string, string>();
-
             // Fetch media for each ad
-            await Promise.all(ads.map(async (ad) => {
+            const results = await Promise.all(adsList.map(async (ad) => {
                 try {
                     const response = await fetch(`${webhookUrl}/tash-snap-media`, {
                         method: 'POST',
@@ -128,19 +134,33 @@ export const AdsList: React.FC<AdsListProps> = ({ adAccountId, adsquadId, onSele
                         const data = await response.json();
                         // Response is an array with media objects
                         if (Array.isArray(data) && data.length > 0 && data[0].link) {
-                            previewMap.set(ad.id, data[0].link);
+                            const link = data[0].link;
+                            // Detect if it's an image based on URL pattern
+                            const isVideo = !link.includes('image_preview');
+                            return { id: ad.id, link, isVideo };
                         }
                     }
                 } catch (err) {
                     console.error(`Error fetching media for ad ${ad.id}:`, err);
                 }
+                return null;
             }));
 
-            setMediaPreviews(previewMap);
+            // Update state with results
+            setMediaPreviews(prev => {
+                const newMap = new Map(prev);
+                results.forEach(result => {
+                    if (result) {
+                        newMap.set(result.id, { link: result.link, isVideo: result.isVideo });
+                    }
+                });
+                return newMap;
+            });
         } catch (err) {
             console.error('Error fetching media previews:', err);
         } finally {
             setMediaLoading(false);
+            isFetchingMediaRef.current = false;
         }
     };
 
@@ -380,31 +400,192 @@ export const AdsList: React.FC<AdsListProps> = ({ adAccountId, adsquadId, onSele
         }
     ];
 
-    if (loading) {
-        return (
-            <div className={styles.loadingState}>
-                <div className={styles.spinner}></div>
-                <p>{t('common.loading')}</p>
-            </div>
-        );
-    }
+    // Render loading, error, or content based on state
+    const renderContent = () => {
+        if (loading) {
+            return (
+                <div className={styles.loadingState}>
+                    <div className={styles.spinner}></div>
+                    <p>{t('common.loading')}</p>
+                </div>
+            );
+        }
 
-    if (error) {
-        return (
-            <div className={styles.errorState}>
-                <p>{error}</p>
-            </div>
-        );
-    }
+        if (error) {
+            return (
+                <div className={styles.errorState}>
+                    <p>{error}</p>
+                </div>
+            );
+        }
 
-    if (ads.length === 0) {
+        if (ads.length === 0) {
+            return (
+                <div className={styles.emptyState}>
+                    <Film size={48} />
+                    <p>{t('campaigns.noAds')}</p>
+                </div>
+            );
+        }
+
         return (
-            <div className={styles.emptyState}>
-                <Film size={48} />
-                <p>{t('campaigns.noAds')}</p>
-            </div>
+            <>
+                <Tabs tabs={tabs} activeTab={activeTab} onTabChange={(id) => setActiveTab(id as typeof activeTab)} />
+
+                {displayAds.length === 0 ? (
+                    <div className={styles.emptyTabState}>
+                        <Film size={48} />
+                        <p>
+                            {activeTab === 'active' && t('campaigns.noActiveAds')}
+                            {activeTab === 'top' && t('campaigns.noTopAd')}
+                            {activeTab === 'paused' && t('campaigns.noPausedAds')}
+                        </p>
+                    </div>
+                ) : (
+                    <div className={styles.grid}>
+                        {displayAds.map((ad) => {
+                            const isTopPerformer = activeTab === 'top' && ad.id === topPerformer?.id;
+                            const stats = performanceStats.get(ad.id);
+                            const roas = isTopPerformer && stats && stats.spend > 0
+                                ? stats.conversion_purchases_value / stats.spend
+                                : null;
+
+                            return (
+                                <Card
+                                    key={ad.id}
+                                    className={`${styles.adCard} ${isTopPerformer ? styles.topPerformerCard : ''}`}
+                                    hover={!!onSelectAd}
+                                    onClick={() => onSelectAd && onSelectAd(ad)}
+                                >
+                                    {isTopPerformer && (
+                                        <div className={styles.topPerformerBadge}>
+                                            <Award size={16} />
+                                            <span>{t('campaigns.topPerformer')}</span>
+                                        </div>
+                                    )}
+
+                                    {/* Media Preview */}
+                                    <div className={styles.mediaPreview}>
+                                        {mediaLoading ? (
+                                            <div className={styles.mediaSkeleton}>
+                                                <div className={styles.skeletonPulse}></div>
+                                            </div>
+                                        ) : mediaPreviews.has(ad.id) ? (
+                                            <div className={styles.mediaThumb}>
+                                                {mediaPreviews.get(ad.id)!.isVideo ? (
+                                                    <>
+                                                        <video
+                                                            key={`media-${ad.id}`}
+                                                            src={mediaPreviews.get(ad.id)!.link}
+                                                            muted
+                                                            preload="metadata"
+                                                            className={styles.previewVideo}
+                                                        />
+                                                        <div className={styles.playOverlay}>
+                                                            <Play size={24} />
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <img
+                                                        key={`media-${ad.id}`}
+                                                        src={mediaPreviews.get(ad.id)!.link}
+                                                        alt={ad.name}
+                                                        className={styles.previewVideo}
+                                                    />
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div className={styles.mediaPlaceholder}>
+                                                <Film size={32} />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className={styles.adHeader}>
+                                        <div className={styles.adIcon}>
+                                            <Image size={20} />
+                                        </div>
+                                        <h3 className={styles.adName}>{ad.name}</h3>
+                                    </div>
+
+                                    {
+                                        isTopPerformer && roas && (
+                                            <div className={styles.topPerformerReason}>
+                                                <span className={styles.reasonLabel}>{t('campaigns.topPerformerReason')}:</span>
+                                                <span className={styles.reasonValue}>
+                                                    {t('campaigns.highestRoas')} ({roas.toFixed(2)}x)
+                                                </span>
+                                            </div>
+                                        )
+                                    }
+
+                                    <div className={styles.badgeRow}>
+                                        {ad.status && (
+                                            <span
+                                                className={`${styles.statusBadge} ${ad.status === 'ACTIVE' ? styles.active :
+                                                    ad.status === 'PAUSED' ? styles.paused :
+                                                        styles.inactive
+                                                    }`}
+                                            >
+                                                {ad.status === 'PAUSED' ? 'PAUSED' : ad.status}
+                                            </span>
+                                        )}
+                                        {ad.review_status && (
+                                            <span className={`${styles.reviewBadge} ${getReviewBadgeColor(ad.review_status)}`}>
+                                                {ad.review_status}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <div className={styles.adDetails}>
+                                        {stats ? (
+                                            <>
+                                                <div className={styles.detail}>
+                                                    <span className={styles.detailLabel}>{t('campaigns.spend')}:</span>
+                                                    <span className={styles.detailValue}>
+                                                        ${((stats.spend || 0) / 1000000).toFixed(2)}
+                                                    </span>
+                                                </div>
+                                                <div className={styles.detail}>
+                                                    <span className={styles.detailLabel}>{t('campaigns.purchases')}:</span>
+                                                    <span className={styles.detailValue}>
+                                                        {stats.conversion_purchases || 0}
+                                                    </span>
+                                                </div>
+                                                <div className={styles.detail}>
+                                                    <span className={styles.detailLabel}>{t('campaigns.roas')}:</span>
+                                                    <span className={`${styles.detailValue} ${stats.spend > 0 && stats.conversion_purchases_value > 0
+                                                        ? (stats.conversion_purchases_value / stats.spend) >= 2
+                                                            ? styles.roasGood
+                                                            : (stats.conversion_purchases_value / stats.spend) >= 1
+                                                                ? styles.roasOk
+                                                                : styles.roasPoor
+                                                        : ''
+                                                        }`}>
+                                                        {stats.spend > 0 && stats.conversion_purchases_value > 0
+                                                            ? `${(stats.conversion_purchases_value / stats.spend).toFixed(2)}x`
+                                                            : 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className={styles.detail}>
+                                                <span className={styles.detailLabel}>{t('campaigns.noData')}</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className={styles.adFooter}>
+                                        <span className={styles.adId}>ID: {ad.id.substring(0, 8)}...</span>
+                                    </div>
+                                </Card>
+                            );
+                        })}
+                    </div >
+                )}
+            </>
         );
-    }
+    };
 
     return (
         <div className={styles.adsList}>
@@ -436,6 +617,7 @@ export const AdsList: React.FC<AdsListProps> = ({ adAccountId, adsquadId, onSele
                 </div>
             </div>
 
+            {/* Filters for performance data - ALWAYS rendered to preserve state */}
             <div className={styles.controls}>
                 <DateRangePicker value={dateRange} onChange={setDateRange} />
                 {activeTab === 'top' ? (
@@ -451,152 +633,14 @@ export const AdsList: React.FC<AdsListProps> = ({ adAccountId, adsquadId, onSele
                 <Button
                     onClick={handleAskAI}
                     variant="secondary"
-                    disabled={ads.length === 0}
+                    disabled={ads.length === 0 || loading}
                 >
                     <Sparkles size={18} />
                     {t('reports.askAI')}
                 </Button>
             </div>
 
-            <Tabs tabs={tabs} activeTab={activeTab} onTabChange={(id) => setActiveTab(id as typeof activeTab)} />
-
-            {displayAds.length === 0 ? (
-                <div className={styles.emptyTabState}>
-                    <Film size={48} />
-                    <p>
-                        {activeTab === 'active' && t('campaigns.noActiveAds')}
-                        {activeTab === 'top' && t('campaigns.noTopAd')}
-                        {activeTab === 'paused' && t('campaigns.noPausedAds')}
-                    </p>
-                </div>
-            ) : (
-                <div className={styles.grid}>
-                    {displayAds.map((ad) => {
-                        const isTopPerformer = activeTab === 'top' && ad.id === topPerformer?.id;
-                        const stats = performanceStats.get(ad.id);
-                        const roas = isTopPerformer && stats && stats.spend > 0
-                            ? stats.conversion_purchases_value / stats.spend
-                            : null;
-
-                        return (
-                            <Card
-                                key={ad.id}
-                                className={`${styles.adCard} ${isTopPerformer ? styles.topPerformerCard : ''}`}
-                                hover={!!onSelectAd}
-                                onClick={() => onSelectAd && onSelectAd(ad)}
-                            >
-                                {isTopPerformer && (
-                                    <div className={styles.topPerformerBadge}>
-                                        <Award size={16} />
-                                        <span>{t('campaigns.topPerformer')}</span>
-                                    </div>
-                                )}
-
-                                {/* Media Preview */}
-                                <div className={styles.mediaPreview}>
-                                    {mediaLoading ? (
-                                        <div className={styles.mediaSkeleton}>
-                                            <div className={styles.skeletonPulse}></div>
-                                        </div>
-                                    ) : mediaPreviews.has(ad.id) ? (
-                                        <div className={styles.mediaThumb}>
-                                            <video
-                                                src={mediaPreviews.get(ad.id)}
-                                                muted
-                                                preload="metadata"
-                                                className={styles.previewVideo}
-                                            />
-                                            <div className={styles.playOverlay}>
-                                                <Play size={24} />
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className={styles.mediaPlaceholder}>
-                                            <Film size={32} />
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className={styles.adHeader}>
-                                    <div className={styles.adIcon}>
-                                        <Image size={20} />
-                                    </div>
-                                    <h3 className={styles.adName}>{ad.name}</h3>
-                                </div>
-
-                                {isTopPerformer && roas && (
-                                    <div className={styles.topPerformerReason}>
-                                        <span className={styles.reasonLabel}>{t('campaigns.topPerformerReason')}:</span>
-                                        <span className={styles.reasonValue}>
-                                            {t('campaigns.highestRoas')} ({roas.toFixed(2)}x)
-                                        </span>
-                                    </div>
-                                )}
-
-                                <div className={styles.badgeRow}>
-                                    {ad.status && (
-                                        <span
-                                            className={`${styles.statusBadge} ${ad.status === 'ACTIVE' ? styles.active :
-                                                ad.status === 'PAUSED' ? styles.paused :
-                                                    styles.inactive
-                                                }`}
-                                        >
-                                            {ad.status === 'PAUSED' ? 'PAUSED' : ad.status}
-                                        </span>
-                                    )}
-                                    {ad.review_status && (
-                                        <span className={`${styles.reviewBadge} ${getReviewBadgeColor(ad.review_status)}`}>
-                                            {ad.review_status}
-                                        </span>
-                                    )}
-                                </div>
-
-                                <div className={styles.adDetails}>
-                                    {stats ? (
-                                        <>
-                                            <div className={styles.detail}>
-                                                <span className={styles.detailLabel}>{t('campaigns.spend')}:</span>
-                                                <span className={styles.detailValue}>
-                                                    ${((stats.spend || 0) / 1000000).toFixed(2)}
-                                                </span>
-                                            </div>
-                                            <div className={styles.detail}>
-                                                <span className={styles.detailLabel}>{t('campaigns.purchases')}:</span>
-                                                <span className={styles.detailValue}>
-                                                    {stats.conversion_purchases || 0}
-                                                </span>
-                                            </div>
-                                            <div className={styles.detail}>
-                                                <span className={styles.detailLabel}>{t('campaigns.roas')}:</span>
-                                                <span className={`${styles.detailValue} ${stats.spend > 0 && stats.conversion_purchases_value > 0
-                                                    ? (stats.conversion_purchases_value / stats.spend) >= 2
-                                                        ? styles.roasGood
-                                                        : (stats.conversion_purchases_value / stats.spend) >= 1
-                                                            ? styles.roasOk
-                                                            : styles.roasPoor
-                                                    : ''
-                                                    }`}>
-                                                    {stats.spend > 0 && stats.conversion_purchases_value > 0
-                                                        ? `${(stats.conversion_purchases_value / stats.spend).toFixed(2)}x`
-                                                        : 'N/A'}
-                                                </span>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className={styles.detail}>
-                                            <span className={styles.detailLabel}>{t('campaigns.noData')}</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className={styles.adFooter}>
-                                    <span className={styles.adId}>ID: {ad.id.substring(0, 8)}...</span>
-                                </div>
-                            </Card>
-                        );
-                    })}
-                </div>
-            )}
+            {renderContent()}
 
             <AIReportModal
                 isOpen={isAIModalOpen}

@@ -348,31 +348,141 @@ export const CampaignsList: React.FC<CampaignsListProps> = ({
         }
     ];
 
-    if (loading) {
-        return (
-            <div className={styles.loadingState}>
-                <div className={styles.spinner}></div>
-                <p>{t('common.loading')}</p>
-            </div>
-        );
-    }
+    // Render loading, error, or content based on state
+    const renderContent = () => {
+        if (loading) {
+            return (
+                <div className={styles.loadingState}>
+                    <div className={styles.spinner}></div>
+                    <p>{t('common.loading')}</p>
+                </div>
+            );
+        }
 
-    if (error) {
-        return (
-            <div className={styles.errorState}>
-                <p>{error}</p>
-            </div>
-        );
-    }
+        if (error) {
+            return (
+                <div className={styles.errorState}>
+                    <p>{error}</p>
+                </div>
+            );
+        }
 
-    if (campaigns.length === 0) {
+        if (campaigns.length === 0) {
+            return (
+                <div className={styles.emptyState}>
+                    <Activity size={48} />
+                    <p>{t('campaigns.noCampaigns')}</p>
+                </div>
+            );
+        }
+
         return (
-            <div className={styles.emptyState}>
-                <Activity size={48} />
-                <p>{t('campaigns.noCampaigns')}</p>
-            </div>
+            <>
+                <Tabs tabs={tabs} activeTab={activeTab} onTabChange={(id) => setActiveTab(id as typeof activeTab)} />
+
+                {displayCampaigns.length === 0 ? (
+                    <div className={styles.emptyTabState}>
+                        <Activity size={48} />
+                        <p>
+                            {activeTab === 'active' && t('campaigns.noActiveCampaigns')}
+                            {activeTab === 'top' && t('campaigns.noTopPerformer')}
+                            {activeTab === 'paused' && t('campaigns.noPausedCampaigns')}
+                        </p>
+                    </div>
+                ) : (
+                    <div className={styles.grid}>
+                        {displayCampaigns.map((campaign) => {
+                            const isTopPerformer = activeTab === 'top' && campaign.id === topPerformer?.id;
+                            const stats = performanceStats.get(campaign.id);
+                            const roas = isTopPerformer && stats && stats.spend > 0
+                                ? stats.conversion_purchases_value / stats.spend
+                                : null;
+
+                            return (
+                                <Card
+                                    key={campaign.id}
+                                    className={`${styles.campaignCard} ${isTopPerformer ? styles.topPerformerCard : ''}`}
+                                    hover
+                                    onClick={() => onSelectCampaign(campaign)}
+                                >
+                                    {isTopPerformer && (
+                                        <div className={styles.topPerformerBadge}>
+                                            <Award size={16} />
+                                            <span>{t('campaigns.topPerformer')}</span>
+                                        </div>
+                                    )}
+
+                                    <div className={styles.campaignHeader}>
+                                        <h3 className={styles.campaignName}>{campaign.name}</h3>
+                                        <span
+                                            className={`${styles.statusBadge} ${campaign.status === 'ACTIVE' ? styles.active :
+                                                campaign.status === 'PAUSED' ? styles.paused :
+                                                    styles.inactive
+                                                }`}
+                                        >
+                                            {campaign.status === 'PAUSED' ? 'PAUSED' : campaign.status}
+                                        </span>
+                                    </div>
+
+                                    {isTopPerformer && roas && (
+                                        <div className={styles.topPerformerReason}>
+                                            <span className={styles.reasonLabel}>{t('campaigns.topPerformerReason')}:</span>
+                                            <span className={styles.reasonValue}>
+                                                {t('campaigns.highestRoas')} ({roas.toFixed(2)}x)
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    <div className={styles.campaignDetails}>
+                                        {stats ? (
+                                            <>
+                                                <div className={styles.detail}>
+                                                    <span className={styles.detailLabel}>{t('campaigns.spend')}:</span>
+                                                    <span className={styles.detailValue}>
+                                                        ${((stats.spend || 0) / 1000000).toFixed(2)}
+                                                    </span>
+                                                </div>
+                                                <div className={styles.detail}>
+                                                    <span className={styles.detailLabel}>{t('campaigns.purchases')}:</span>
+                                                    <span className={styles.detailValue}>
+                                                        {stats.conversion_purchases || 0}
+                                                    </span>
+                                                </div>
+                                                <div className={styles.detail}>
+                                                    <span className={styles.detailLabel}>{t('campaigns.roas')}:</span>
+                                                    <span className={`${styles.detailValue} ${stats.spend > 0 && stats.conversion_purchases_value > 0
+                                                        ? (stats.conversion_purchases_value / stats.spend) >= 2
+                                                            ? styles.roasGood
+                                                            : (stats.conversion_purchases_value / stats.spend) >= 1
+                                                                ? styles.roasOk
+                                                                : styles.roasPoor
+                                                        : ''
+                                                        }`}>
+                                                        {stats.spend > 0 && stats.conversion_purchases_value > 0
+                                                            ? `${(stats.conversion_purchases_value / stats.spend).toFixed(2)}x`
+                                                            : 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className={styles.detail}>
+                                                <span className={styles.detailLabel}>{t('campaigns.noData')}</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className={styles.campaignFooter}>
+                                        <span className={styles.campaignId}>ID: {campaign.id.substring(0, 8)}...</span>
+                                        <ChevronRight size={20} className={styles.arrow} />
+                                    </div>
+                                </Card>
+                            );
+                        })}
+                    </div>
+                )}
+            </>
         );
-    }
+    };
 
     return (
         <div className={styles.campaignsList}>
@@ -395,7 +505,7 @@ export const CampaignsList: React.FC<CampaignsListProps> = ({
                 </div>
             </div>
 
-            {/* Filters for performance data */}
+            {/* Filters for performance data - ALWAYS rendered to preserve state */}
             <div className={styles.controls}>
                 <DateRangePicker value={dateRange} onChange={setDateRange} />
                 {activeTab === 'top' ? (
@@ -411,115 +521,14 @@ export const CampaignsList: React.FC<CampaignsListProps> = ({
                 <Button
                     onClick={handleAskAI}
                     variant="secondary"
-                    disabled={campaigns.length === 0}
+                    disabled={campaigns.length === 0 || loading}
                 >
                     <Sparkles size={18} />
                     {t('reports.askAI')}
                 </Button>
             </div>
 
-            <Tabs tabs={tabs} activeTab={activeTab} onTabChange={(id) => setActiveTab(id as typeof activeTab)} />
-
-            {displayCampaigns.length === 0 ? (
-                <div className={styles.emptyTabState}>
-                    <Activity size={48} />
-                    <p>
-                        {activeTab === 'active' && t('campaigns.noActiveCampaigns')}
-                        {activeTab === 'top' && t('campaigns.noTopPerformer')}
-                        {activeTab === 'paused' && t('campaigns.noPausedCampaigns')}
-                    </p>
-                </div>
-            ) : (
-                <div className={styles.grid}>
-                    {displayCampaigns.map((campaign) => {
-                        const isTopPerformer = activeTab === 'top' && campaign.id === topPerformer?.id;
-                        const stats = performanceStats.get(campaign.id);
-                        const roas = isTopPerformer && stats && stats.spend > 0
-                            ? stats.conversion_purchases_value / stats.spend
-                            : null;
-
-                        return (
-                            <Card
-                                key={campaign.id}
-                                className={`${styles.campaignCard} ${isTopPerformer ? styles.topPerformerCard : ''}`}
-                                hover
-                                onClick={() => onSelectCampaign(campaign)}
-                            >
-                                {isTopPerformer && (
-                                    <div className={styles.topPerformerBadge}>
-                                        <Award size={16} />
-                                        <span>{t('campaigns.topPerformer')}</span>
-                                    </div>
-                                )}
-
-                                <div className={styles.campaignHeader}>
-                                    <h3 className={styles.campaignName}>{campaign.name}</h3>
-                                    <span
-                                        className={`${styles.statusBadge} ${campaign.status === 'ACTIVE' ? styles.active :
-                                            campaign.status === 'PAUSED' ? styles.paused :
-                                                styles.inactive
-                                            }`}
-                                    >
-                                        {campaign.status === 'PAUSED' ? 'PAUSED' : campaign.status}
-                                    </span>
-                                </div>
-
-                                {isTopPerformer && roas && (
-                                    <div className={styles.topPerformerReason}>
-                                        <span className={styles.reasonLabel}>{t('campaigns.topPerformerReason')}:</span>
-                                        <span className={styles.reasonValue}>
-                                            {t('campaigns.highestRoas')} ({roas.toFixed(2)}x)
-                                        </span>
-                                    </div>
-                                )}
-
-                                <div className={styles.campaignDetails}>
-                                    {stats ? (
-                                        <>
-                                            <div className={styles.detail}>
-                                                <span className={styles.detailLabel}>{t('campaigns.spend')}:</span>
-                                                <span className={styles.detailValue}>
-                                                    ${((stats.spend || 0) / 1000000).toFixed(2)}
-                                                </span>
-                                            </div>
-                                            <div className={styles.detail}>
-                                                <span className={styles.detailLabel}>{t('campaigns.purchases')}:</span>
-                                                <span className={styles.detailValue}>
-                                                    {stats.conversion_purchases || 0}
-                                                </span>
-                                            </div>
-                                            <div className={styles.detail}>
-                                                <span className={styles.detailLabel}>{t('campaigns.roas')}:</span>
-                                                <span className={`${styles.detailValue} ${stats.spend > 0 && stats.conversion_purchases_value > 0
-                                                    ? (stats.conversion_purchases_value / stats.spend) >= 2
-                                                        ? styles.roasGood
-                                                        : (stats.conversion_purchases_value / stats.spend) >= 1
-                                                            ? styles.roasOk
-                                                            : styles.roasPoor
-                                                    : ''
-                                                    }`}>
-                                                    {stats.spend > 0 && stats.conversion_purchases_value > 0
-                                                        ? `${(stats.conversion_purchases_value / stats.spend).toFixed(2)}x`
-                                                        : 'N/A'}
-                                                </span>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className={styles.detail}>
-                                            <span className={styles.detailLabel}>{t('campaigns.noData')}</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className={styles.campaignFooter}>
-                                    <span className={styles.campaignId}>ID: {campaign.id.substring(0, 8)}...</span>
-                                    <ChevronRight size={20} className={styles.arrow} />
-                                </div>
-                            </Card>
-                        );
-                    })}
-                </div>
-            )}
+            {renderContent()}
 
             <AIReportModal
                 isOpen={isAIModalOpen}
