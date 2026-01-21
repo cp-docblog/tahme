@@ -9,6 +9,10 @@ import { CampaignsList } from '../components/Campaigns/CampaignsList';
 import { AdSquadsList } from '../components/Campaigns/AdSquadsList';
 import { AdsList } from '../components/Campaigns/AdsList';
 import { AdReport } from '../components/Campaigns/AdReport';
+import { FbCampaignsList } from '../components/Campaigns/FbCampaignsList';
+import { FbAdSetsList } from '../components/Campaigns/FbAdSetsList';
+import { FbAdsList } from '../components/Campaigns/FbAdsList';
+import { FbAdReport } from '../components/Campaigns/FbAdReport';
 import styles from './Campaigns.module.css';
 
 interface Client {
@@ -16,6 +20,9 @@ interface Client {
     name: string;
     snapchat_ad_account_id: string | null;
     snapchat_ad_account_name: string | null;
+    facebook_ad_account_id: string | null;
+    facebook_ad_account_name: string | null;
+    facebook_access_token: string | null;
 }
 
 interface Campaign {
@@ -59,7 +66,7 @@ export const Campaigns: React.FC = () => {
         try {
             const { data, error } = await supabase
                 .from('clients')
-                .select('id, name, snapchat_ad_account_id, snapchat_ad_account_name')
+                .select('id, name, snapchat_ad_account_id, snapchat_ad_account_name, facebook_ad_account_id, facebook_ad_account_name, facebook_access_token')
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -150,10 +157,18 @@ export const Campaigns: React.FC = () => {
     // Determine which view to show
     const showClientsList = !selectedClient;
     const showPlatformCards = selectedClient && !selectedPlatform;
-    const showCampaignsList = selectedPlatform && selectedClient?.snapchat_ad_account_id && !selectedCampaign;
-    const showAdSquadsList = selectedCampaign && selectedClient?.snapchat_ad_account_id && !selectedAdSquad;
-    const showAdsList = selectedAdSquad && selectedClient?.snapchat_ad_account_id && !selectedAd;
-    const showAdReport = selectedAd && selectedClient?.snapchat_ad_account_id;
+
+    // Snapchat views
+    const showSnapCampaignsList = selectedPlatform === 'snapchat' && selectedClient?.snapchat_ad_account_id && !selectedCampaign;
+    const showSnapAdSquadsList = selectedCampaign && selectedPlatform === 'snapchat' && selectedClient?.snapchat_ad_account_id && !selectedAdSquad;
+    const showSnapAdsList = selectedAdSquad && selectedPlatform === 'snapchat' && selectedClient?.snapchat_ad_account_id && !selectedAd;
+    const showSnapAdReport = selectedAd && selectedPlatform === 'snapchat' && selectedClient?.snapchat_ad_account_id;
+
+    // Facebook views
+    const showFbCampaignsList = selectedPlatform === 'facebook' && selectedClient?.facebook_ad_account_id && !selectedCampaign;
+    const showFbAdSetsList = selectedCampaign && selectedPlatform === 'facebook' && selectedClient?.facebook_ad_account_id && !selectedAdSquad;
+    const showFbAdsList = selectedAdSquad && selectedPlatform === 'facebook' && selectedClient?.facebook_ad_account_id && !selectedAd;
+    const showFbAdReport = selectedAd && selectedPlatform === 'facebook' && selectedClient?.facebook_ad_account_id;
 
     return (
         <div className={styles.campaigns}>
@@ -193,6 +208,11 @@ export const Campaigns: React.FC = () => {
                                             Snapchat: {client.snapchat_ad_account_name}
                                         </span>
                                     )}
+                                    {client.facebook_ad_account_name && (
+                                        <span className={styles.adAccountBadge}>
+                                            Facebook: {client.facebook_ad_account_name}
+                                        </span>
+                                    )}
                                     <ChevronRight size={20} className={styles.arrow} />
                                 </div>
                             </Card>
@@ -220,9 +240,9 @@ export const Campaigns: React.FC = () => {
                 </div>
             )}
 
-            {/* Campaigns List View */}
-            {selectedPlatform && selectedClient?.snapchat_ad_account_id && (
-                <div style={{ display: showCampaignsList ? 'block' : 'none' }}>
+            {/* Snapchat Campaigns List View */}
+            {selectedPlatform === 'snapchat' && selectedClient?.snapchat_ad_account_id && (
+                <div style={{ display: showSnapCampaignsList ? 'block' : 'none' }}>
                     <div className={styles.header}>
                         <div>
                             {renderBreadcrumb()}
@@ -241,9 +261,31 @@ export const Campaigns: React.FC = () => {
                 </div>
             )}
 
-            {/* Ad Squads List View */}
-            {selectedCampaign && selectedClient?.snapchat_ad_account_id && (
-                <div style={{ display: showAdSquadsList ? 'block' : 'none' }}>
+            {/* Facebook Campaigns List View */}
+            {selectedPlatform === 'facebook' && selectedClient?.facebook_ad_account_id && selectedClient?.facebook_access_token && (
+                <div style={{ display: showFbCampaignsList ? 'block' : 'none' }}>
+                    <div className={styles.header}>
+                        <div>
+                            {renderBreadcrumb()}
+                            <h1 className={styles.title}>{t('campaigns.campaignsFor')} {selectedClient.name}</h1>
+                            <p className={styles.subtitle}>{selectedPlatform}</p>
+                        </div>
+                        <Button variant="outline" onClick={handleBack}>
+                            {t('common.back')}
+                        </Button>
+                    </div>
+                    <FbCampaignsList
+                        clientId={selectedClient.id}
+                        adAccountId={selectedClient.facebook_ad_account_id}
+                        accessToken={selectedClient.facebook_access_token}
+                        onSelectCampaign={handleSelectCampaign}
+                    />
+                </div>
+            )}
+
+            {/* Snapchat Ad Squads List View */}
+            {selectedCampaign && selectedPlatform === 'snapchat' && selectedClient?.snapchat_ad_account_id && (
+                <div style={{ display: showSnapAdSquadsList ? 'block' : 'none' }}>
                     <div className={styles.header}>
                         <div>
                             {renderBreadcrumb()}
@@ -262,9 +304,31 @@ export const Campaigns: React.FC = () => {
                 </div>
             )}
 
-            {/* Ads List View */}
-            {selectedAdSquad && selectedClient?.snapchat_ad_account_id && (
-                <div style={{ display: showAdsList ? 'block' : 'none' }}>
+            {/* Facebook Ad Sets List View */}
+            {selectedCampaign && selectedPlatform === 'facebook' && selectedClient?.facebook_ad_account_id && selectedClient?.facebook_access_token && (
+                <div style={{ display: showFbAdSetsList ? 'block' : 'none' }}>
+                    <div className={styles.header}>
+                        <div>
+                            {renderBreadcrumb()}
+                            <h1 className={styles.title}>{t('campaigns.adSetsInCampaign')}</h1>
+                            <p className={styles.subtitle}>{selectedCampaign.name}</p>
+                        </div>
+                        <Button variant="outline" onClick={handleBack}>
+                            {t('common.back')}
+                        </Button>
+                    </div>
+                    <FbAdSetsList
+                        adAccountId={selectedClient.facebook_ad_account_id}
+                        accessToken={selectedClient.facebook_access_token}
+                        campaignId={selectedCampaign.id}
+                        onSelectAdSet={handleSelectAdSquad}
+                    />
+                </div>
+            )}
+
+            {/* Snapchat Ads List View */}
+            {selectedAdSquad && selectedPlatform === 'snapchat' && selectedClient?.snapchat_ad_account_id && (
+                <div style={{ display: showSnapAdsList ? 'block' : 'none' }}>
                     <div className={styles.header}>
                         <div>
                             {renderBreadcrumb()}
@@ -283,9 +347,31 @@ export const Campaigns: React.FC = () => {
                 </div>
             )}
 
-            {/* Ad Report View */}
-            {selectedAd && selectedClient?.snapchat_ad_account_id && (
-                <div style={{ display: showAdReport ? 'block' : 'none' }}>
+            {/* Facebook Ads List View */}
+            {selectedAdSquad && selectedPlatform === 'facebook' && selectedClient?.facebook_ad_account_id && selectedClient?.facebook_access_token && (
+                <div style={{ display: showFbAdsList ? 'block' : 'none' }}>
+                    <div className={styles.header}>
+                        <div>
+                            {renderBreadcrumb()}
+                            <h1 className={styles.title}>{t('campaigns.adsInAdSet')}</h1>
+                            <p className={styles.subtitle}>{selectedAdSquad.name}</p>
+                        </div>
+                        <Button variant="outline" onClick={handleBack}>
+                            {t('common.back')}
+                        </Button>
+                    </div>
+                    <FbAdsList
+                        adAccountId={selectedClient.facebook_ad_account_id}
+                        accessToken={selectedClient.facebook_access_token}
+                        adsetId={selectedAdSquad.id}
+                        onSelectAd={handleSelectAd}
+                    />
+                </div>
+            )}
+
+            {/* Snapchat Ad Report View */}
+            {selectedAd && selectedPlatform === 'snapchat' && selectedClient?.snapchat_ad_account_id && (
+                <div style={{ display: showSnapAdReport ? 'block' : 'none' }}>
                     <div className={styles.header}>
                         <div>
                             {renderBreadcrumb()}
@@ -299,6 +385,27 @@ export const Campaigns: React.FC = () => {
                         adId={selectedAd.id}
                         adName={selectedAd.name}
                         adAccountId={selectedClient.snapchat_ad_account_id}
+                    />
+                </div>
+            )}
+
+            {/* Facebook Ad Report View */}
+            {selectedAd && selectedPlatform === 'facebook' && selectedClient?.facebook_ad_account_id && selectedClient?.facebook_access_token && (
+                <div style={{ display: showFbAdReport ? 'block' : 'none' }}>
+                    <div className={styles.header}>
+                        <div>
+                            {renderBreadcrumb()}
+                            <h1 className={styles.title}>{t('reports.adPerformance')}</h1>
+                        </div>
+                        <Button variant="outline" onClick={handleBack}>
+                            {t('common.back')}
+                        </Button>
+                    </div>
+                    <FbAdReport
+                        adId={selectedAd.id}
+                        adName={selectedAd.name}
+                        adAccountId={selectedClient.facebook_ad_account_id}
+                        accessToken={selectedClient.facebook_access_token}
                     />
                 </div>
             )}

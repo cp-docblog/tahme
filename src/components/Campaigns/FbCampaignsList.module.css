@@ -1,0 +1,263 @@
+.campaignsList {
+    width: 100%;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.statCard {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    color: var(--color-primary);
+}
+
+.statLabel {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.statValue {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.controls {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.campaignCard {
+    padding: var(--spacing-lg);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.campaignHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.campaignName {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--color-text);
+    flex: 1;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.statusBadge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-transform: uppercase;
+}
+
+.statusBadge.active {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--color-success);
+}
+
+.statusBadge.inactive {
+    background-color: rgba(156, 163, 175, 0.1);
+    color: var(--color-text-secondary);
+}
+
+.statusBadge.paused {
+    background-color: rgba(251, 191, 36, 0.1);
+    color: #f59e0b;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+}
+
+.campaignDetails {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--color-bg);
+    border-radius: 8px;
+}
+
+.detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+}
+
+.detailLabel {
+    color: var(--color-text-secondary);
+    font-weight: 500;
+}
+
+.detailValue {
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.detailValue.delivering {
+    color: var(--color-success);
+}
+
+.detailValue.notDelivering {
+    color: var(--color-warning);
+}
+
+.campaignFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--color-border);
+}
+
+.campaignId {
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+    font-family: monospace;
+}
+
+.arrow {
+    color: var(--color-primary);
+    transition: transform var(--transition-fast);
+}
+
+.campaignCard:hover .arrow {
+    transform: translateX(4px);
+}
+
+[dir="rtl"] .campaignCard:hover .arrow {
+    transform: translateX(-4px);
+}
+
+/* Top Performer Styles */
+.topPerformerCard {
+    border: 2px solid var(--color-primary);
+    position: relative;
+    overflow: visible;
+}
+
+.topPerformerBadge {
+    position: absolute;
+    top: -12px;
+    right: var(--spacing-lg);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: 0.375rem 0.75rem;
+    background: linear-gradient(135deg, var(--color-primary), #1e40af);
+    color: white;
+    border-radius: 100px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.3);
+    z-index: 1;
+}
+
+[dir="rtl"] .topPerformerBadge {
+    right: auto;
+    left: var(--spacing-lg);
+}
+
+.topPerformerReason {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.1), rgba(30, 64, 175, 0.1));
+    border-radius: 8px;
+    margin-bottom: var(--spacing-md);
+    font-size: 0.875rem;
+}
+
+.reasonLabel {
+    color: var(--color-text-secondary);
+    font-weight: 500;
+}
+
+.reasonValue {
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
+/* Empty Tab State */
+.emptyTabState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-2xl);
+    text-align: center;
+    color: var(--color-text-secondary);
+    min-height: 200px;
+}
+
+.loadingState,
+.errorState,
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-2xl);
+    text-align: center;
+    color: var(--color-text-secondary);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: var(--spacing-md);
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.errorState {
+    color: var(--color-error);
+}
+
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+}

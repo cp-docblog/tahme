@@ -1,0 +1,144 @@
+For your internal "own use" scenario, the setup is significantly easier than the Agency SaaS model because you do not need to pass the rigorous "Tech Provider" Business Verification or sign complex contracts. You can operate in **Development Mode** or **Standard Access**, which allows you to manage ad accounts that you (or your Business Manager) own directly.
+
+Here is the technical roadmap for integrating the Facebook (Meta) Marketing API.
+
+### 1. The "Internal Tool" Setup (No Verification Required)
+
+Since you are managing your own (or your agency's own) assets, you can bypass the App Review process by keeping the app in **Development Mode** or using **Standard Access**.
+
+1. **Create a System User (Recommended):** instead of using your personal Facebook login, go to **Business Settings > Users > System Users**. Create a new System User and assign it the role of "Admin".
+2. **Generate Access Token:** Click "Generate New Token" for that System User. Select your App and check the following permissions:
+* `ads_read` (Read campaigns/ads) 
+
+
+* `read_insights` (Get stats) 
+
+
+* `ads_management` (If you plan to edit ads later) 
+
+
+
+
+3. **Assign Assets:** In Business Settings, assign your **Ad Accounts** to this System User. This is the critical step that allows the token to access the data without verification.
+
+### 2. Structural Data Retrieval (Campaigns, Ad Sets, Ads)
+
+In Meta's hierarchy, the "Ad Group" equivalent is called an **Ad Set**.
+
+**Base URL:** `https://graph.facebook.com/v19.0` (or the latest stable version)
+
+#### A. Get Campaigns
+
+* **Endpoint:** `/act_{ad_account_id}/campaigns`
+* **Method:** `GET`
+* **Fields:** `id, name, status, objective, buying_type`
+* **Request:**
+```http
+GET /v19.0/act_123456789/campaigns?fields=id,name,status,objective&access_token={token}
+
+```
+
+
+
+#### B. Get Ad Sets (Equivalent to Groups)
+
+* **Endpoint:** `/act_{ad_account_id}/adsets`
+* **Method:** `GET`
+* **Fields:** `id, name, status, campaign_id, billing_event, optimization_goal, targeting`
+* **Request:**
+```http
+GET /v19.0/act_123456789/adsets?fields=id,name,status,campaign_id,billing_event&access_token={token}
+
+```
+
+
+
+#### C. Get Ads
+
+* **Endpoint:** `/act_{ad_account_id}/ads`
+* **Method:** `GET`
+* **Fields:** `id, name, status, adset_id, creative`
+* **Request:**
+```http
+GET /v19.0/act_123456789/ads?fields=id,name,status,adset_id,creative&access_token={token}
+
+```
+
+
+
+### 3. Media Extraction: Getting "The Video Itself"
+
+Unlike TikTok, Meta separates the "Ad" object from the "Creative" object. To get the actual video file (MP4), you must follow a three-step chain: **Ad -> AdCreative -> Video Node**.
+
+**Step 1: Get the Video ID from the Ad**
+When fetching the Ad (above), you requested the `creative` field. You can also expand it directly to get the `video_id`.
+
+* **Request:**
+```http
+GET /v19.0/act_{ad_account_id}/ads?fields=creative{video_id,image_url,thumbnail_url,object_story_spec}
+
+```
+
+
+* **Logic:**
+* If `creative.video_id` exists, it is a video ad.
+* If not, check `creative.object_story_spec.video_data.video_id`.
+* If neither exists, it is likely an Image ad; use `creative.image_url`.
+
+
+
+**Step 2: Get the Downloadable Video URL**
+Once you have the `video_id`, you must query the Video Node to get the `source` field. This returns a signed, high-quality MP4 link.
+
+* **Endpoint:** `/{video_id}`
+* **Fields:** `source` (This is the direct download link)
+* **Request:**
+```http
+GET /v19.0/{video_id}?fields=source,permalink_url,picture&access_token={token}
+
+```
+
+
+* **Response:**
+```json
+{
+  "source": "https://video.xx.fbcdn.net/v/t42.1790-2/...", 
+  "id": "987654321"
+}
+
+```
+
+
+* **Action:** Download the file from the `source` URL immediately and cache it. Like TikTok, these URLs are signed and will expire.
+
+
+
+### 4. Performance Reporting: Ad Insights
+
+Meta's Reporting API is called **Insights**. It is a single powerful endpoint that aggregates data.
+
+* **Endpoint:** `/act_{ad_account_id}/insights`
+* **Method:** `GET`
+* **Parameters:**
+* `level`: `ad` (Gives you stats per ad row)
+* `date_preset`: `maximum` (or `last_30d`, `this_month`)
+* `fields`: `spend,impressions,clicks,cpc,cpm,ctr,actions,reach`
+
+
+* **Request:**
+```http
+GET /v19.0/act_123456789/insights?level=ad&fields=spend,impressions,clicks,cpc,ctr,actions&date_preset=last_30d&access_token={token}
+
+```
+
+
+* **Note on "Actions":** Meta returns conversions (like purchases or leads) inside the `actions` list. You will need to parse this list to find specific events (e.g., `action_type: "purchase"` or `action_type: "lead"`).
+
+### Summary of Differences from TikTok
+
+| Feature | TikTok API | Facebook (Meta) Graph API |
+| --- | --- | --- |
+| **Hierarchy** | Campaign > Ad Group > Ad | Campaign > **Ad Set** > Ad |
+| **Video ID** | Found in `ad.creatives` | Found in `ad.creative` or `object_story_spec` |
+| **Video File** | Requires `video/query/` sometimes | Query `/{video_id}?fields=source` |
+| **Auth** | OAuth Code Flow usually required | **System User Access Token** (simpler for internal use) |

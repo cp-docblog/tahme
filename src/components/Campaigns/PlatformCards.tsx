@@ -32,7 +32,7 @@ export const PlatformCards: React.FC<PlatformCardsProps> = ({ onSelectPlatform, 
             name: 'Facebook',
             icon: Share2,
             color: '#1877F2',
-            available: false,
+            available: true,
         },
     ];
 

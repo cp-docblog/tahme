@@ -31,106 +31,115 @@ export const NewClient: React.FC = () => {
         snapchat_ad_account_name: '',
         facebook_username: '',
         facebook_password: '',
+        facebook_ad_account_id: '',
+        facebook_ad_account_name: '',
+        facebook_access_token: '',
     });
 
-    // TODO: Fix TypeScript 'never' type errors with Supabase client before re-enabling
-    // useEffect(() => {
-    //     if (isEditMode && clientId) {
-    //         fetchClientData();
-    //     }
-    // }, [clientId, isEditMode]);
+    useEffect(() => {
+        if (isEditMode && clientId) {
+            fetchClientData();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [clientId, isEditMode]);
 
-    // TODO: Fix TypeScript 'never' type errors with Supabase client before re-enabling
-    // const fetchClientData = async () => {
-    //     try {
-    //         setFetchingClient(true);
-    //         const { data, error } = await supabase
-    //             .from('clients')
-    //             .select('*')
-    //             .eq('id', clientId!)
-    //             .returns<Database['public']['Tables']['clients']['Row'][]>()
-    //             .single();
-    //
-    //         if (error) throw error;
-    //
-    //         if (data) {
-    //             setFormData({
-    //                 name: data.name || '',
-    //                 clickup_folder: data.clickup_folder || '',
-    //                 contact_name: data.contact_name || '',
-    //                 contact_email: data.contact_email || '',
-    //                 contact_phone: data.contact_phone || '',
-    //                 tiktok_username: data.tiktok_username || '',
-    //                 tiktok_password: data.tiktok_password || '',
-    //                 snapchat_ad_account_id: data.snapchat_ad_account_id || '',
-    //                 snapchat_ad_account_name: data.snapchat_ad_account_name || '',
-    //                 facebook_username: data.facebook_username || '',
-    //                 facebook_password: data.facebook_password || '',
-    //             });
-    //         }
-    //     } catch (error) {
-    //         console.error('Error fetching client:', error);
-    //         alert('حدث خطأ أثناء تحميل بيانات العميل');
-    //         navigate('/clients');
-    //     } finally {
-    //         setFetchingClient(false);
-    //     }
-    // };
+    const fetchClientData = async () => {
+        try {
+            setFetchingClient(true);
+            const { data, error } = await (supabase as any)
+                .from('clients')
+                .select('*')
+                .eq('id', clientId!)
+                .single();
+
+            if (error) throw error;
+
+            if (data) {
+                const clientData = data as any;
+                setFormData({
+                    name: clientData.name || '',
+                    clickup_folder: clientData.clickup_folder || '',
+                    contact_name: clientData.contact_name || '',
+                    contact_email: clientData.contact_email || '',
+                    contact_phone: clientData.contact_phone || '',
+                    tiktok_username: clientData.tiktok_username || '',
+                    tiktok_password: clientData.tiktok_password || '',
+                    snapchat_ad_account_id: clientData.snapchat_ad_account_id || '',
+                    snapchat_ad_account_name: clientData.snapchat_ad_account_name || '',
+                    facebook_username: clientData.facebook_username || '',
+                    facebook_password: clientData.facebook_password || '',
+                    facebook_ad_account_id: clientData.facebook_ad_account_id || '',
+                    facebook_ad_account_name: clientData.facebook_ad_account_name || '',
+                    facebook_access_token: clientData.facebook_access_token || '',
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching client:', error);
+            alert('حدث خطأ أثناء تحميل بيانات العميل');
+            navigate('/clients');
+        } finally {
+            setFetchingClient(false);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
-        // TODO: Fix TypeScript 'never' type errors with Supabase client before re-enabling update/insert
         try {
-            // if (isEditMode && clientId) {
-            //     // Update existing client
-            //     const updateData = {
-            //         name: formData.name,
-            //         clickup_folder: formData.clickup_folder || null,
-            //         contact_name: formData.contact_name || null,
-            //         contact_email: formData.contact_email || null,
-            //         contact_phone: formData.contact_phone || null,
-            //         tiktok_username: formData.tiktok_username || null,
-            //         tiktok_password: formData.tiktok_password || null,
-            //         snapchat_ad_account_id: formData.snapchat_ad_account_id || null,
-            //         snapchat_ad_account_name: formData.snapchat_ad_account_name || null,
-            //         facebook_username: formData.facebook_username || null,
-            //         facebook_password: formData.facebook_password || null,
-            //     };
-            //
-            //     const { error } = await supabase
-            //         .from('clients')
-            //         .update(updateData)
-            //         .eq('id', clientId);
-            //
-            //     if (error) throw error;
-            // } else {
-            //     // Create new client
-            //     const insertData = {
-            //         name: formData.name,
-            //         clickup_folder: formData.clickup_folder || null,
-            //         contact_name: formData.contact_name || null,
-            //         contact_email: formData.contact_email || null,
-            //         contact_phone: formData.contact_phone || null,
-            //         tiktok_username: formData.tiktok_username || null,
-            //         tiktok_password: formData.tiktok_password || null,
-            //         snapchat_ad_account_id: formData.snapchat_ad_account_id || null,
-            //         snapchat_ad_account_name: formData.snapchat_ad_account_name || null,
-            //         facebook_username: formData.facebook_username || null,
-            //         facebook_password: formData.facebook_password || null,
-            //         created_by: (await supabase.auth.getUser()).data.user?.id || '',
-            //     };
-            //
-            //     const { error } = await supabase
-            //         .from('clients')
-            //         .insert(insertData);
-            //
-            //     if (error) throw error;
-            // }
+            if (isEditMode && clientId) {
+                // Update existing client
+                const updateData = {
+                    name: formData.name,
+                    clickup_folder: formData.clickup_folder || null,
+                    contact_name: formData.contact_name || null,
+                    contact_email: formData.contact_email || null,
+                    contact_phone: formData.contact_phone || null,
+                    tiktok_username: formData.tiktok_username || null,
+                    tiktok_password: formData.tiktok_password || null,
+                    snapchat_ad_account_id: formData.snapchat_ad_account_id || null,
+                    snapchat_ad_account_name: formData.snapchat_ad_account_name || null,
+                    facebook_username: formData.facebook_username || null,
+                    facebook_password: formData.facebook_password || null,
+                    facebook_ad_account_id: formData.facebook_ad_account_id || null,
+                    facebook_ad_account_name: formData.facebook_ad_account_name || null,
+                    facebook_access_token: formData.facebook_access_token || null,
+                };
 
-            alert('تم تعطيل إضافة/تحديث العملاء مؤقتاً - يرجى إصلاح أخطاء TypeScript');
-            console.warn('Client save/update functionality temporarily disabled');
+                const { error } = await (supabase as any)
+                    .from('clients')
+                    .update(updateData)
+                    .eq('id', clientId);
+
+                if (error) throw error;
+            } else {
+                // Create new client
+                const userResult = await supabase.auth.getUser();
+                const insertData = {
+                    name: formData.name,
+                    clickup_folder: formData.clickup_folder || null,
+                    contact_name: formData.contact_name || null,
+                    contact_email: formData.contact_email || null,
+                    contact_phone: formData.contact_phone || null,
+                    tiktok_username: formData.tiktok_username || null,
+                    tiktok_password: formData.tiktok_password || null,
+                    snapchat_ad_account_id: formData.snapchat_ad_account_id || null,
+                    snapchat_ad_account_name: formData.snapchat_ad_account_name || null,
+                    facebook_username: formData.facebook_username || null,
+                    facebook_password: formData.facebook_password || null,
+                    facebook_ad_account_id: formData.facebook_ad_account_id || null,
+                    facebook_ad_account_name: formData.facebook_ad_account_name || null,
+                    facebook_access_token: formData.facebook_access_token || null,
+                    created_by: userResult.data.user?.id || '',
+                };
+
+                const { error } = await (supabase as any)
+                    .from('clients')
+                    .insert(insertData);
+
+                if (error) throw error;
+            }
+
             navigate('/clients');
         } catch (error) {
             console.error('Error saving client:', error);
@@ -252,24 +261,30 @@ export const NewClient: React.FC = () => {
                     </div>
                 </Card>
 
-                <Card className={`${styles.section} ${styles.platformSection} comingSoon`} data-coming-soon-text={t('newClient.comingSoon')}>
+                <Card className={styles.section}>
                     <h2 className={styles.sectionTitle}>
                         <Share2 size={20} style={{ marginInlineEnd: '0.5rem' }} />
                         Facebook
                     </h2>
                     <div className={styles.formGrid}>
                         <Input
-                            label={t('newClient.fields.facebookUsername')}
-                            value={formData.facebook_username}
-                            onChange={(e) => handleChange('facebook_username', e.target.value)}
-                            disabled
+                            label={t('newClient.fields.facebookAccountId')}
+                            value={formData.facebook_ad_account_id}
+                            onChange={(e) => handleChange('facebook_ad_account_id', e.target.value)}
+                            placeholder="e.g. 123456789012345"
                         />
                         <Input
-                            label={t('newClient.fields.facebookPassword')}
+                            label={t('newClient.fields.facebookAccountName')}
+                            value={formData.facebook_ad_account_name}
+                            onChange={(e) => handleChange('facebook_ad_account_name', e.target.value)}
+                            placeholder="e.g. My Business Ad Account"
+                        />
+                        <Input
+                            label={t('newClient.fields.facebookAccessToken')}
+                            value={formData.facebook_access_token}
+                            onChange={(e) => handleChange('facebook_access_token', e.target.value)}
+                            placeholder="System User Access Token"
                             type="password"
-                            value={formData.facebook_password}
-                            onChange={(e) => handleChange('facebook_password', e.target.value)}
-                            disabled
                         />
                     </div>
                 </Card>

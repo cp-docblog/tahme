@@ -78,7 +78,7 @@
             "connect": "Connect",
             "snapchatDescription": "Connect your Snapchat Ads account to manage and analyze your campaigns directly from the dashboard.",
             "tiktokDescription": "TikTok Ads integration coming soon. Stay tuned for updates!",
-            "facebookDescription": "Facebook Ads integration coming soon. Stay tuned for updates!"
+            "facebookDescription": "Connect your Facebook Ads account to manage and analyze your campaigns directly from the dashboard."
         }
     },
     "newClient": {
@@ -103,7 +103,10 @@
             "snapchatAccountName": "Snapchat Account Name",
             "adAccount": "Ad Account",
             "facebookUsername": "Facebook Username",
-            "facebookPassword": "Facebook Password"
+            "facebookPassword": "Facebook Password",
+            "facebookAccountId": "Facebook Ad Account ID",
+            "facebookAccountName": "Facebook Ad Account Name",
+            "facebookAccessToken": "Facebook Access Token"
         },
         "actions": {
             "save": "Save Client",
@@ -123,7 +126,9 @@
         "selectPlatform": "Select Platform",
         "campaignsFor": "Campaigns for",
         "adSquadsInCampaign": "Ad Squads in Campaign",
+        "adSetsInCampaign": "Ad Sets in Campaign",
         "adsInAdSquad": "Ads in Ad Squad",
+        "adsInAdSet": "Ads in Ad Set",
         "noCampaigns": "No campaigns found",
         "noAdSquads": "No ad squads found",
         "noAds": "No ads found",
@@ -201,6 +206,7 @@
         "noData": "No data available",
         "mediaPreview": "Ad Preview",
         "clickToPlay": "Click to play",
+        "videoPreview": "Video Preview",
         "loadingMedia": "Loading preview..."
     },
     "common": {

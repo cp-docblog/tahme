@@ -78,7 +78,7 @@
             "connect": "ربط",
             "snapchatDescription": "اربط حسابك الإعلاني في سناب شات لإدارة وتحليل حملاتك مباشرة من لوحة التحكم.",
             "tiktokDescription": "تكامل إعلانات تيك توك قادم قريباً. ترقبوا التحديثات!",
-            "facebookDescription": "تكامل إعلانات فيسبوك قادم قريباً. ترقبوا التحديثات!"
+            "facebookDescription": "اربط حسابك الإعلاني في فيسبوك لإدارة وتحليل حملاتك مباشرة من لوحة التحكم."
         }
     },
     "newClient": {
@@ -103,7 +103,10 @@
             "snapchatAccountName": "اسم حساب Snapchat",
             "adAccount": "حساب الإعلانات",
             "facebookUsername": "اسم المستخدم Facebook",
-            "facebookPassword": "كلمة المرور Facebook"
+            "facebookPassword": "كلمة المرور Facebook",
+            "facebookAccountId": "معرف حساب Facebook الإعلاني",
+            "facebookAccountName": "اسم حساب Facebook الإعلاني",
+            "facebookAccessToken": "رمز وصول Facebook"
         },
         "actions": {
             "save": "حفظ العميل",
@@ -123,7 +126,9 @@
         "selectPlatform": "اختر المنصة",
         "campaignsFor": "حملات",
         "adSquadsInCampaign": "مجموعات الإعلانات في الحملة",
+        "adSetsInCampaign": "مجموعات الإعلانات في الحملة",
         "adsInAdSquad": "إعلانات مجموعة الإعلانات",
+        "adsInAdSet": "إعلانات مجموعة الإعلانات",
         "noCampaigns": "لا توجد حملات",
         "noAdSquads": "لا توجد مجموعات إعلانات",
         "noAds": "لا توجد إعلانات",
@@ -201,6 +206,7 @@
         "noData": "لا توجد بيانات",
         "mediaPreview": "معاينة الإعلان",
         "clickToPlay": "انقر للتشغيل",
+        "videoPreview": "معاينة الفيديو",
         "loadingMedia": "جاري تحميل المعاينة..."
     },
     "common": {

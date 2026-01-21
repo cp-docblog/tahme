@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { TrendingUp, DollarSign, ShoppingCart, CreditCard, Target, Eye, Sparkles, Play, Film } from 'lucide-react';
+import { TrendingUp, DollarSign, ShoppingCart, Eye, Sparkles, Play, Film } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '../../lib/supabase';
 import { Card } from '../UI/Card';
 import { Button } from '../UI/Button';
 import { DateRangePicker } from '../UI/DateRangePicker';
@@ -9,16 +10,17 @@ import { TimeSeriesChart } from '../Charts/TimeSeriesChart';
 import { ConversionFunnel } from '../Charts/ConversionFunnel';
 import { AIReportModal } from './AIReportModal';
 import { DateRange } from '../../types/dateRange';
-import { Granularity, AdReportStats, TimeseriesDataPoint, AdReportResponse } from '../../types/metrics';
-import styles from './AdReport.module.css';
+import { Granularity, AdReportStats, TimeseriesDataPoint } from '../../types/metrics';
+import styles from './FbAdReport.module.css';
 
-interface AdReportProps {
+interface FbAdReportProps {
     adId: string;
     adName: string;
     adAccountId: string;
+    accessToken: string;
 }
 
-export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId }) => {
+export const FbAdReport: React.FC<FbAdReportProps> = ({ adId, adName, adAccountId, accessToken }) => {
     const { t, i18n } = useTranslation();
 
     // State
@@ -35,8 +37,8 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
     const [aiLoading, setAILoading] = useState(false);
     const [aiError, setAIError] = useState<string | null>(null);
 
-    // Media Preview State - stores { link: string, isVideo: boolean }
-    const [mediaPreview, setMediaPreview] = useState<{ link: string; isVideo: boolean } | null>(null);
+    // Media Preview State - store thumbnail for preview, videoLink for playback
+    const [mediaPreview, setMediaPreview] = useState<{ thumbnail: string; videoLink: string | null; isVideo: boolean } | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [mediaLoading, setMediaLoading] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -46,101 +48,61 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
     useEffect(() => {
         fetchReport();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [adId, granularity, dateRange.start, dateRange.end]);
+    }, [adId, granularity, dateRange.start, dateRange.end, accessToken]);
 
-    // Fetch media preview only when adId changes - separate from report to avoid duplicate fetches
+    // Fetch media preview only when adId changes
     useEffect(() => {
-        // Skip if already fetched for this adId
         if (lastFetchedAdIdRef.current === adId) return;
 
         const abortController = new AbortController();
-        fetchMediaPreview(abortController.signal);
+        fetchMediaPreview();
 
         return () => abortController.abort();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [adId]);
+    }, [adId, accessToken]);
 
-    const fetchMediaPreview = async (signal?: AbortSignal) => {
+    const fetchMediaPreview = async () => {
         setMediaLoading(true);
         try {
-            const webhookUrl = process.env.REACT_APP_BACKEND_WEBHOOK;
-            if (!webhookUrl) return;
-
-            const response = await fetch(`${webhookUrl}/tash-snap-media`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ad_id: adId }),
-                signal
+            const { data, error } = await supabase.functions.invoke('fb-media', {
+                body: {
+                    ad_id: adId,
+                    access_token: accessToken,
+                },
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                if (Array.isArray(data) && data.length > 0 && data[0].link) {
-                    if (!signal?.aborted) {
-                        const link = data[0].link;
-                        // Detect if it's an image based on URL pattern
-                        const isVideo = !link.includes('image_preview');
-                        setMediaPreview({ link, isVideo });
-                        lastFetchedAdIdRef.current = adId;
-                    }
+            console.log('fb-media response:', { data, error });
+
+            if (!error && data && Array.isArray(data) && data.length > 0) {
+                const mediaData = data[0];
+                console.log('Media data:', mediaData);
+
+                // Check if link is actually a video URL (not a JPEG/PNG thumbnail)
+                const isPlayableVideo = mediaData.is_video &&
+                    mediaData.link &&
+                    !mediaData.link.includes('.jpg') &&
+                    !mediaData.link.includes('.jpeg') &&
+                    !mediaData.link.includes('.png');
+
+                // For playable videos: use thumbnail_url for display, link for playback
+                // For images: use link (high-res) for display
+                const displayImage = isPlayableVideo
+                    ? (mediaData.thumbnail_url || mediaData.link)
+                    : (mediaData.link || mediaData.thumbnail_url);
+
+                if (displayImage) {
+                    setMediaPreview({
+                        thumbnail: displayImage,
+                        videoLink: isPlayableVideo ? mediaData.link : null,
+                        isVideo: mediaData.is_video || false,
+                    });
+                    lastFetchedAdIdRef.current = adId;
                 }
             }
         } catch (err) {
-            // Ignore abort errors - they're expected when dependencies change
-            if (err instanceof Error && err.name === 'AbortError') return;
             console.error('Error fetching media preview:', err);
         } finally {
-            if (!signal?.aborted) {
-                setMediaLoading(false);
-            }
-        }
-    };
-
-    const handlePlayClick = () => {
-        setIsPlaying(true);
-        // Start playback after state update
-        setTimeout(() => {
-            if (videoRef.current) {
-                videoRef.current.play();
-            }
-        }, 100);
-    };
-
-    const handleAnalyzeMedia = async () => {
-        setIsAIModalOpen(true);
-        setAILoading(true);
-        setAIError(null);
-        setAIOutput(null);
-
-        try {
-            const webhookUrl = process.env.REACT_APP_BACKEND_WEBHOOK;
-            if (!webhookUrl) {
-                throw new Error('Backend webhook URL not configured');
-            }
-
-            const response = await fetch(`${webhookUrl}/tash-snap-media-analysis`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ad_id: adId })
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to analyze media');
-            }
-
-            const data = await response.json();
-
-            // Response is an array with content.parts[0].text
-            if (Array.isArray(data) && data.length > 0 && data[0]?.content?.parts?.[0]?.text) {
-                setAIOutput(data[0].content.parts[0].text);
-            } else {
-                throw new Error('No analysis received');
-            }
-        } catch (err) {
-            console.error('Error analyzing media:', err);
-            setAIError(t('reports.aiError'));
-        } finally {
-            setAILoading(false);
+            setMediaLoading(false);
         }
     };
 
@@ -149,175 +111,103 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
         setError(null);
 
         try {
-            const webhookUrl = process.env.REACT_APP_BACKEND_WEBHOOK;
-            if (!webhookUrl) {
-                throw new Error('Backend webhook URL not configured');
+            // Build date range
+            let startDate: string | undefined;
+            let endDate: string | undefined;
+
+            if (dateRange.start && dateRange.end) {
+                let effectiveStart = dateRange.start;
+                let effectiveEnd = dateRange.end;
+
+                // Limit HOUR granularity to 7 days max (168 data points)
+                if (granularity === 'HOUR') {
+                    const daysDiff = Math.ceil((effectiveEnd.getTime() - effectiveStart.getTime()) / (1000 * 60 * 60 * 24));
+                    if (daysDiff > 7) {
+                        console.warn(`⚠️ HOUR granularity limited to 7 days. Truncating from ${daysDiff} days.`);
+                        // Adjust start date to be 7 days before end date
+                        effectiveStart = new Date(effectiveEnd);
+                        effectiveStart.setDate(effectiveStart.getDate() - 7);
+                    }
+                }
+
+                startDate = effectiveStart.toISOString().split('T')[0];
+                endDate = effectiveEnd.toISOString().split('T')[0];
             }
 
-            // Build request body
-            const requestBody: any = {
-                ad_account_id: adAccountId,
-                ad_id: adId
-            };
-
-            // Build complete URL query string for Snapchat API
-            const buildQueryString = (): string => {
-                const params: string[] = [];
-
-                // Always include fields
-                const fields = [
-                    'impressions',
-                    'swipe_up_percent',
-                    'spend',
-                    'conversion_purchases',
-                    'conversion_purchases_value',
-                    'conversion_start_checkout',
-                    'conversion_add_billing'
-                ].join(',');
-                params.push(`fields=${fields}`);
-
-                // Format date for Snapchat: Asia/Riyadh timezone, ISO format
-                const formatSnapchatDate = (date: Date, isEndDate: boolean = false, granularity: Granularity = 'TOTAL'): string => {
-                    // Get date in Asia/Riyadh timezone (UTC+3)
-                    const year = date.getFullYear();
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const day = String(date.getDate()).padStart(2, '0');
-
-                    let isoString: string;
-
-                    if (isEndDate) {
-                        // Snapchat API requirement: end time MUST be at the beginning of an hour
-                        // This applies to ALL granularities (TOTAL, DAY, HOUR)
-                        // Solution: Add 1 day and use 00:00:00
-                        const nextDay = new Date(date);
-                        nextDay.setDate(nextDay.getDate() + 1);
-                        const nextYear = nextDay.getFullYear();
-                        const nextMonth = String(nextDay.getMonth() + 1).padStart(2, '0');
-                        const nextDayNum = String(nextDay.getDate()).padStart(2, '0');
-
-                        isoString = `${nextYear}-${nextMonth}-${nextDayNum}T00:00:00+03:00`;
-                    } else {
-                        // Start times always use beginning of day
-                        isoString = `${year}-${month}-${day}T00:00:00+03:00`;
-                    }
-
-                    // URL encode the + sign
-                    return isoString.replace('+', '%2B');
-                };
-
-                // Handle start_time and end_time
-                let startDate: Date;
-                let endDate: Date;
-
-                if (dateRange.start && dateRange.end) {
-                    // User selected date range
-                    startDate = dateRange.start;
-                    endDate = dateRange.end;
-                } else {
-                    // Default: Last 30 days
-                    const today = new Date();
-                    const thirtyDaysAgo = new Date();
-                    thirtyDaysAgo.setDate(today.getDate() - 30);
-
-                    startDate = thirtyDaysAgo;
-                    endDate = today;
-                }
-
-                // Validate and adjust for HOURLY granularity constraint (max 7 days)
-                if (granularity === 'HOUR') {
-                    const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-
-                    // Important: Since we add +1 day to end_time, we need to limit to 6 days
-                    // to ensure the final query span (after adding 1 day) doesn't exceed 7 days
-                    if (daysDiff > 6) {
-                        console.warn(`⚠️ HOURLY granularity limited to 7 days by Snapchat API. Truncating range from ${daysDiff} days to 6 days (7 days after end_time adjustment).`);
-                        // Adjust start date to be 6 days before end date
-                        startDate = new Date(endDate);
-                        startDate.setDate(startDate.getDate() - 6);
-                    }
-                }
-
-                const startTime = formatSnapchatDate(startDate, false, granularity);
-                const endTime = formatSnapchatDate(endDate, true, granularity);
-
-                params.push(`start_time=${startTime}`);
-                params.push(`end_time=${endTime}`);
-
-                // Granularity
-                params.push(`granularity=${granularity}`);
-
-                // Attribution windows - swipe_up (click) only
-                params.push(`swipe_up_attribution_window=7_DAY`);
-                params.push(`view_attribution_window=NONE`);
-
-                // Omit empty (always true for cleaner data)
-                params.push(`omit_empty=true`);
-
-                return params.join('&');
-            };
-
-            // Add query string to request
-            requestBody.query_string = buildQueryString();
-
-            const response = await fetch(`${webhookUrl}/fetch-snap-ad-report`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            const { data, error: fnError } = await supabase.functions.invoke('fb-insights', {
+                body: {
+                    ad_account_id: adAccountId,
+                    access_token: accessToken,
+                    level: 'ad',
+                    start_date: startDate,
+                    end_date: endDate,
+                    granularity: granularity,
                 },
-                body: JSON.stringify(requestBody),
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch ad report');
-            }
-
-            const data: AdReportResponse[] = await response.json();
+            if (fnError) throw fnError;
 
             // Parse the response based on granularity
             if (granularity === 'TOTAL') {
-                if (data && Array.isArray(data) && data[0]?.total_stats?.[0]?.total_stat?.stats) {
-                    setStats(data[0].total_stats[0].total_stat.stats);
+                // TOTAL: Use breakdown_stats format
+                if (data && Array.isArray(data) && data[0]?.total_stats?.[0]?.total_stat?.breakdown_stats?.ad) {
+                    const adStats = data[0].total_stats[0].total_stat.breakdown_stats.ad;
+                    const thisAdStats = adStats.find((item: any) => item.id === adId);
+
+                    if (thisAdStats?.stats) {
+                        setStats(thisAdStats.stats);
+                    } else {
+                        // If no specific ad stats, use first available
+                        setStats(adStats[0]?.stats || null);
+                    }
                     setTimeseriesData([]);
                 }
             } else {
-                // DAY or HOUR granularity
+                // DAY or HOUR: Use timeseries_stats format
                 if (data && Array.isArray(data) && data[0]?.timeseries_stats?.[0]?.timeseries_stat?.timeseries) {
                     const timeseries = data[0].timeseries_stats[0].timeseries_stat.timeseries;
                     setTimeseriesData(timeseries);
 
                     // Calculate aggregate stats for metric cards
-                    const aggregateStats = timeseries.reduce((acc, point) => {
+                    const aggregateStats = timeseries.reduce((acc: any, point: any) => {
                         return {
                             impressions: acc.impressions + (point.stats.impressions || 0),
-                            swipe_up_percent: acc.swipe_up_percent + (point.stats.swipe_up_percent || 0),
+                            clicks: acc.clicks + (point.stats.clicks || 0),
                             spend: acc.spend + (point.stats.spend || 0),
+                            reach: acc.reach + (point.stats.reach || 0),
                             conversion_purchases: acc.conversion_purchases + (point.stats.conversion_purchases || 0),
                             conversion_purchases_value: acc.conversion_purchases_value + (point.stats.conversion_purchases_value || 0),
-                            conversion_start_checkout: acc.conversion_start_checkout + (point.stats.conversion_start_checkout || 0),
-                            conversion_add_billing: acc.conversion_add_billing + (point.stats.conversion_add_billing || 0)
                         };
                     }, {
                         impressions: 0,
-                        swipe_up_percent: 0,
+                        clicks: 0,
                         spend: 0,
+                        reach: 0,
                         conversion_purchases: 0,
                         conversion_purchases_value: 0,
-                        conversion_start_checkout: 0,
-                        conversion_add_billing: 0
                     });
 
-                    // Average swipe_up_percent
-                    aggregateStats.swipe_up_percent = aggregateStats.swipe_up_percent / timeseries.length;
-
                     setStats(aggregateStats);
+                } else {
+                    setStats(null);
+                    setTimeseriesData([]);
                 }
             }
         } catch (err) {
-            console.error('Error fetching ad report:', err);
+            console.error('Error fetching Facebook ad report:', err);
             setError(t('common.error'));
         } finally {
             setLoading(false);
         }
+    };
+
+    const handlePlayClick = () => {
+        setIsPlaying(true);
+        setTimeout(() => {
+            if (videoRef.current) {
+                videoRef.current.play();
+            }
+        }, 100);
     };
 
     const formatCurrency = (microAmount: number) => {
@@ -348,8 +238,9 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
     };
 
     const calculateCTR = () => {
-        if (!stats || !stats.swipe_up_percent) return 0;
-        return stats.swipe_up_percent;
+        const clicks = (stats as any)?.clicks || 0;
+        if (!stats || !stats.impressions || stats.impressions === 0 || !clicks) return 0;
+        return clicks / stats.impressions;
     };
 
     const handleAskAI = async () => {
@@ -366,20 +257,18 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
                 throw new Error('Backend webhook URL not configured');
             }
 
-            // Prepare ad data for AI analysis
             const adData = {
                 ad_id: adId,
                 ad_name: adName,
                 ad_account_id: adAccountId,
-                language: i18n.language, // Send user's chosen language (ar or en)
+                platform: 'facebook',
+                language: i18n.language,
                 stats: {
                     impressions: stats.impressions || 0,
                     spend: stats.spend || 0,
-                    swipe_up_percent: stats.swipe_up_percent || 0,
+                    clicks: (stats as any).clicks || 0,
                     conversion_purchases: stats.conversion_purchases || 0,
                     conversion_purchases_value: stats.conversion_purchases_value || 0,
-                    conversion_start_checkout: stats.conversion_start_checkout || 0,
-                    conversion_add_billing: stats.conversion_add_billing || 0,
                     roas: calculateROAS(),
                     cpp: calculateCPP(),
                     cpm: calculateCPM(),
@@ -406,11 +295,9 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
 
             const data = await response.json();
 
-            // Backend returns an array: [{ "output": "the output"}]
             if (Array.isArray(data) && data.length > 0 && data[0].output) {
                 setAIOutput(data[0].output);
             } else if (data.output) {
-                // Fallback for non-array response
                 setAIOutput(data.output);
             } else {
                 throw new Error('No output received from AI');
@@ -423,13 +310,61 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
         }
     };
 
+    const handleAnalyzeMedia = async () => {
+        if (!mediaPreview) return;
+
+        setIsAIModalOpen(true);
+        setAILoading(true);
+        setAIError(null);
+        setAIOutput(null);
+
+        try {
+            const webhookUrl = process.env.REACT_APP_BACKEND_WEBHOOK;
+            if (!webhookUrl) {
+                throw new Error('Backend webhook URL not configured');
+            }
+
+            // Get the media URL - prefer video link for videos, otherwise use thumbnail
+            const mediaUrl = mediaPreview.videoLink || mediaPreview.thumbnail;
+
+            const response = await fetch(`${webhookUrl}/tash-snap-media-analysis`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ad_id: adId,
+                    platform: 'facebook',
+                    media_url: mediaUrl,
+                    is_video: mediaPreview.isVideo
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to analyze media');
+            }
+
+            const data = await response.json();
+
+            // Response is an array with content.parts[0].text
+            if (Array.isArray(data) && data.length > 0 && data[0]?.content?.parts?.[0]?.text) {
+                setAIOutput(data[0].content.parts[0].text);
+            } else if (data.output) {
+                setAIOutput(data.output);
+            } else {
+                throw new Error('No analysis received');
+            }
+        } catch (err) {
+            console.error('Error analyzing media:', err);
+            setAIError(t('reports.aiError'));
+        } finally {
+            setAILoading(false);
+        }
+    };
 
     const roas = calculateROAS();
     const cpp = calculateCPP();
     const cpm = calculateCPM();
     const ctr = calculateCTR();
 
-    // Render loading, error, or content based on state
     const renderContent = () => {
         if (loading) {
             return (
@@ -501,6 +436,14 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
                     </Card>
                 </div>
 
+                {/* Time Series Chart - show for DAY/HOUR granularity */}
+                {granularity !== 'TOTAL' && timeseriesData.length > 0 && (
+                    <Card className={styles.section}>
+                        <h3 className={styles.sectionTitle}>{t('reports.charts.trend')}</h3>
+                        <TimeSeriesChart data={timeseriesData} granularity={granularity} />
+                    </Card>
+                )}
+
                 {/* Media Preview Section */}
                 <Card className={styles.mediaSection}>
                     <h3 className={styles.sectionTitle}>{t('campaigns.mediaPreview')}</h3>
@@ -510,55 +453,63 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
                                 <div className={styles.skeletonPulse}></div>
                             </div>
                         ) : mediaPreview ? (
-                            mediaPreview.isVideo ? (
+                            mediaPreview.isVideo && mediaPreview.videoLink ? (
+                                // Playable video - show play button and video player
                                 <div
                                     className={`${styles.mediaPlayer} ${isPlaying ? styles.playing : ''}`}
                                     onClick={!isPlaying ? handlePlayClick : undefined}
                                 >
-                                    <video
-                                        ref={videoRef}
-                                        src={mediaPreview.link}
-                                        controls={isPlaying}
-                                        muted={!isPlaying}
-                                        preload="metadata"
-                                        className={styles.videoElement}
-                                    />
-                                    {!isPlaying && (
-                                        <div className={styles.playOverlay}>
-                                            <div className={styles.playButton}>
-                                                <Play size={48} />
+                                    {isPlaying ? (
+                                        <video
+                                            ref={videoRef}
+                                            src={mediaPreview.videoLink}
+                                            controls
+                                            autoPlay
+                                            className={styles.videoElement}
+                                            onError={() => setIsPlaying(false)}
+                                        />
+                                    ) : (
+                                        <>
+                                            <img
+                                                src={mediaPreview.thumbnail}
+                                                alt={adName}
+                                                className={styles.videoElement}
+                                            />
+                                            <div className={styles.playOverlay}>
+                                                <div className={styles.playButton}>
+                                                    <Play size={48} />
+                                                </div>
+                                                <span className={styles.clickToPlay}>{t('campaigns.clickToPlay')}</span>
                                             </div>
-                                            <span className={styles.clickToPlay}>{t('campaigns.clickToPlay')}</span>
-                                        </div>
+                                        </>
                                     )}
                                 </div>
                             ) : (
+                                // Image or video without playable source - show as image
                                 <div className={styles.mediaPlayer}>
                                     <img
-                                        src={mediaPreview.link}
+                                        src={mediaPreview.thumbnail}
                                         alt={adName}
                                         className={styles.videoElement}
                                     />
+                                    {mediaPreview.isVideo && (
+                                        <div className={styles.videoLabel}>
+                                            <Film size={16} />
+                                            <span>{t('campaigns.videoPreview')}</span>
+                                        </div>
+                                    )}
                                 </div>
                             )
                         ) : (
                             <div className={styles.mediaPlaceholder}>
-                                <Eye size={48} />
+                                <Film size={48} />
                                 <span>{t('reports.noData')}</span>
                             </div>
                         )}
                     </div>
                 </Card>
 
-                {/* Time Series Chart - Only show for DAY/HOUR */}
-                {granularity !== 'TOTAL' && timeseriesData.length > 0 && (
-                    <Card className={styles.section}>
-                        <h3 className={styles.sectionTitle}>{t('reports.charts.trend')}</h3>
-                        <TimeSeriesChart data={timeseriesData} granularity={granularity} />
-                    </Card>
-                )}
-
-                {/* Conversion Funnel - Enhanced */}
+                {/* Conversion Funnel */}
                 <Card className={styles.section}>
                     <h3 className={styles.sectionTitle}>{t('reports.conversionFunnel')}</h3>
                     <ConversionFunnel
@@ -582,6 +533,10 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
                             <div className={styles.tableValue}>{formatNumber(stats.impressions || 0)}</div>
                         </div>
                         <div className={styles.tableRow}>
+                            <div className={styles.tableLabel}>{t('reports.clicks')}</div>
+                            <div className={styles.tableValue}>{formatNumber((stats as any).clicks || 0)}</div>
+                        </div>
+                        <div className={styles.tableRow}>
                             <div className={styles.tableLabel}>{t('reports.cpm')}</div>
                             <div className={styles.tableValue}>{formatCurrency(cpm)}</div>
                         </div>
@@ -590,14 +545,6 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
                             <div className={styles.tableValue}>{formatPercentage(ctr)}</div>
                         </div>
                         <div className={styles.tableDivider}></div>
-                        <div className={styles.tableRow}>
-                            <div className={styles.tableLabel}>{t('reports.checkoutsInitiated')}</div>
-                            <div className={styles.tableValue}>{formatNumber(stats.conversion_start_checkout || 0)}</div>
-                        </div>
-                        <div className={styles.tableRow}>
-                            <div className={styles.tableLabel}>{t('reports.paymentInfoAdded')}</div>
-                            <div className={styles.tableValue}>{formatNumber(stats.conversion_add_billing || 0)}</div>
-                        </div>
                         <div className={styles.tableRow}>
                             <div className={styles.tableLabel}>{t('reports.purchases')}</div>
                             <div className={styles.tableValue}>{formatNumber(stats.conversion_purchases || 0)}</div>
