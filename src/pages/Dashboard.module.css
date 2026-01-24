@@ -52,10 +52,14 @@
 
 .statCard {
     display: flex;
-    align-items: center;
-    gap: var(--spacing-lg);
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: var(--spacing-sm);
     animation: slideUp 0.5s ease-out;
     animation-fill-mode: both;
+    padding: var(--spacing-lg);
+    /* Ensure padding */
 }
 
 .statCard:nth-child(1) {
@@ -83,10 +87,12 @@
 }
 
 .statValue {
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: 900;
     margin: 0;
     color: var(--color-text);
+    word-break: break-word;
+    line-height: 1.2;
 }
 
 .statLabel {

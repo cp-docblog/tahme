@@ -15,6 +15,17 @@ export interface ClientPerformanceData {
     spend: number;
     revenue: number;
     roas: number;
+    activePlatforms: string[];
+    bestPlatform?: {
+        name: string;
+        roas: number;
+        spend: number;
+    };
+    breakdown?: {
+        snap?: any;
+        tiktok?: any;
+        fb?: any;
+    };
     topCampaign?: {
         id: string;
         name: string;

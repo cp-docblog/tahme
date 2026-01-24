@@ -13,206 +13,76 @@ serve(async (req) => {
     }
 
     try {
-        // Initialize Supabase client with service role
+        // Initialize Supabase client
         const supabase = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
             Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-            {
-                auth: {
-                    autoRefreshToken: false,
-                    persistSession: false
-                }
-            }
+            { auth: { autoRefreshToken: false, persistSession: false } }
         )
 
-        // Verify user authentication
+        // Verify auth
         const authHeader = req.headers.get('Authorization')
         if (!authHeader) {
-            return new Response(
-                JSON.stringify({ error: 'No authorization header' }),
-                { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
+            throw new Error('No authorization header')
         }
-
         const token = authHeader.replace('Bearer ', '')
         const { data: { user }, error: authError } = await supabase.auth.getUser(token)
 
         if (authError || !user) {
-            return new Response(
-                JSON.stringify({ error: 'Unauthorized' }),
-                { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
+            throw new Error('Unauthorized')
         }
 
-        // Check if force refresh is requested from body
+        // Check for force refresh
         const requestBody = await req.json().catch(() => ({}))
         const forceRefresh = requestBody.refresh === true
+        const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
-        // Check cache first (unless force refresh)
+        // Check cache
         if (!forceRefresh) {
-            const { data: cached, error: cacheError } = await supabase
+            const { data: cached } = await supabase
                 .from('dashboard_cache')
                 .select('data, updated_at')
                 .eq('user_id', user.id)
                 .single()
 
-            if (!cacheError && cached) {
-                const cacheAge = Date.now() - new Date(cached.updated_at).getTime()
-                const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
-
-                if (cacheAge < CACHE_DURATION) {
-                    console.log('Returning cached dashboard data')
-                    return new Response(
-                        JSON.stringify(cached.data),
-                        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-                    )
-                }
+            if (cached && (Date.now() - new Date(cached.updated_at).getTime() < CACHE_DURATION)) {
+                return new Response(JSON.stringify(cached.data), {
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                })
             }
         }
 
-        console.log('Fetching fresh dashboard data')
-
-        // Fetch all active clients
+        // Fetch clients
         const { data: clients, error: clientsError } = await supabase
             .from('clients')
             .select('*')
 
-        if (clientsError) {
-            throw new Error(`Failed to fetch clients: ${clientsError.message}`)
-        }
+        if (clientsError) throw new Error(`Failed to fetch clients: ${clientsError.message}`)
+        if (!clients || clients.length === 0) return emptyResponse()
 
-        if (!clients || clients.length === 0) {
-            const emptyData = {
-                quickStats: {
-                    totalClients: 0,
-                    totalCampaigns: 0,
-                    totalSpend: 0,
-                    totalRevenue: 0,
-                    averageRoas: 0
-                },
-                clients: [],
-                insights: {
-                    whatsWorking: [],
-                    whatsNotWorking: []
-                }
-            }
-
-            return new Response(
-                JSON.stringify(emptyData),
-                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
-        }
-
-        // Fetch campaign data for each client from your backend
         const backendUrl = Deno.env.get('BACKEND_WEBHOOK_URL')
-        if (!backendUrl) {
-            throw new Error('BACKEND_WEBHOOK_URL not configured')
-        }
+        const functionUrl = Deno.env.get('SUPABASE_URL') + '/functions/v1'
+        const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
-        const clientsWithMetrics = await Promise.all(
-            clients.map(async (client) => {
-                const clientName = client.name || `Client-${client.id}` // Fallback if name is null
+        // Fetch data for all clients concurrently
+        const clientPromises = clients.map(async (client) => {
+            const results = await Promise.allSettled([
+                fetchSnapchat(client, backendUrl),
+                fetchTikTok(client, functionUrl, serviceKey),
+                fetchFacebook(client, functionUrl, serviceKey)
+            ])
 
-                try {
-                    // Pre-check: Don't fetch if there is no ad account ID
-                    if (!client.snapchat_ad_account_id) {
-                        console.log(`Skipping ${clientName}: No snapchat_ad_account_id found.`)
-                        return getEmptyClientMetrics(client)
-                    }
+            const snap = results[0].status === 'fulfilled' ? results[0].value : null
+            const tiktok = results[1].status === 'fulfilled' ? results[1].value : null
+            const fb = results[2].status === 'fulfilled' ? results[2].value : null
 
-                    const response = await fetch(`${backendUrl}/fetch-snap-campaigns`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            ad_account_id: client.snapchat_ad_account_id
-                        })
-                    })
+            return blendMetrics(client, snap, tiktok, fb)
+        })
 
-                    if (!response.ok) {
-                        console.error(`Failed to fetch campaigns for ${clientName}: ${response.status}`)
-                        return getEmptyClientMetrics(client)
-                    }
+        const clientsWithMetrics = await Promise.all(clientPromises)
 
-                    // --- FIX STARTS HERE ---
-                    const rawText = await response.text()
-                    let campaigns = []
-
-                    // Only parse if we have content
-                    if (rawText && rawText.trim().length > 0) {
-                        try {
-                            const parsedData = JSON.parse(rawText)
-                            // Ensure the response is actually an array before looping
-                            if (Array.isArray(parsedData)) {
-                                campaigns = parsedData
-                            } else {
-                                console.warn(`Expected array for ${clientName}, but got:`, typeof parsedData)
-                                // Optional: Handle if your API returns { data: [...] } structure
-                                // campaigns = parsedData.data || [] 
-                            }
-                        } catch (parseError) {
-                            console.error(`JSON Syntax Error for ${clientName}. Raw response:`, rawText)
-                            // We caught the error, so we default to [] and don't crash the function
-                        }
-                    }
-                    // --- FIX ENDS HERE ---
-
-                    // Aggregate metrics
-                    let totalSpend = 0
-                    let totalRevenue = 0
-                    let activeCampaigns = 0
-
-                    campaigns.forEach((c: any) => {
-                        totalSpend += parseFloat(c.lifetime_spend || 0)
-                        totalRevenue += parseFloat(c.conversion_purchases_value || 0)
-                        if (c.status === 'ACTIVE') {
-                            activeCampaigns++
-                        }
-                    })
-
-                    const roas = totalSpend > 0 ? totalRevenue / totalSpend : 0
-
-                    // Find top performing campaign
-                    const topCampaign = campaigns
-                        .filter((c: any) => {
-                            const cSpend = parseFloat(c.lifetime_spend || 0)
-                            const cRevenue = parseFloat(c.conversion_purchases_value || 0)
-                            return cSpend > 0 && cRevenue > 0
-                        })
-                        .sort((a: any, b: any) => {
-                            const roasA = parseFloat(a.conversion_purchases_value) / parseFloat(a.lifetime_spend)
-                            const roasB = parseFloat(b.conversion_purchases_value) / parseFloat(b.lifetime_spend)
-                            return roasB - roasA
-                        })[0]
-
-                    return {
-                        id: client.id,
-                        name: clientName,
-                        campaignCount: activeCampaigns,
-                        spend: totalSpend,
-                        revenue: totalRevenue,
-                        roas: roas,
-                        topCampaign: topCampaign ? {
-                            id: topCampaign.id,
-                            name: topCampaign.name,
-                            roas: parseFloat(topCampaign.conversion_purchases_value) / parseFloat(topCampaign.lifetime_spend)
-                        } : undefined
-                    }
-                } catch (error) {
-                    console.error(`Error fetching data for client ${clientName}:`, error)
-                    return getEmptyClientMetrics(client)
-                }
-            })
-        )
-        // Calculate overall quick stats
-        const quickStats = {
-            totalClients: clients.length,
-            totalCampaigns: clientsWithMetrics.reduce((sum, c) => sum + c.campaignCount, 0),
-            totalSpend: clientsWithMetrics.reduce((sum, c) => sum + c.spend, 0),
-            totalRevenue: clientsWithMetrics.reduce((sum, c) => sum + c.revenue, 0),
-            averageRoas: calculateWeightedAverageRoas(clientsWithMetrics)
-        }
-
-        // Generate insights
+        // Insights & Stats
+        const quickStats = calculateQuickStats(clientsWithMetrics)
         const insights = generateInsights(clientsWithMetrics)
 
         const dashboardData = {
@@ -221,48 +91,166 @@ serve(async (req) => {
             insights
         }
 
-        // Cache the result
+        // Cache result
         await supabase
             .from('dashboard_cache')
-            .upsert({
-                user_id: user.id,
-                data: dashboardData
-            })
+            .upsert({ user_id: user.id, data: dashboardData })
 
-        return new Response(
-            JSON.stringify(dashboardData),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
+        return new Response(JSON.stringify(dashboardData), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
 
     } catch (error) {
-        console.error('Dashboard function error:', error)
-        return new Response(
-            JSON.stringify({ error: error.message }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
     }
 })
 
-function getEmptyClientMetrics(client: any) {
+// --- Fetchers ---
+
+function getLifetimeRange() {
     return {
-        id: client.id,
-        name: client.name,
-        campaignCount: 0,
-        spend: 0,
-        revenue: 0,
-        roas: 0
+        start_date: '2020-01-01',
+        end_date: new Date().toISOString().split('T')[0]
     }
 }
 
-function calculateWeightedAverageRoas(clients: any[]) {
+async function fetchSnapchat(client: any, backendUrl: string) {
+    if (!client.snapchat_ad_account_id) return null
+    try {
+        const res = await fetch(`${backendUrl}/fetch-snap-campaigns`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ad_account_id: client.snapchat_ad_account_id })
+        })
+        if (!res.ok) return null
+        const campaigns = await res.json()
+
+        let spend = 0, revenue = 0
+        if (Array.isArray(campaigns)) {
+            campaigns.forEach((c: any) => {
+                spend += parseFloat(c.lifetime_spend || 0)
+                revenue += parseFloat(c.conversion_purchases_value || 0)
+            })
+        }
+        return { spend, revenue, campaigns: Array.isArray(campaigns) ? campaigns : [] }
+    } catch { return null }
+}
+
+async function fetchTikTok(client: any, baseUrl: string, key: string) {
+    if (!client.tiktok_advertiser_id) return null
+    try {
+        const res = await fetch(`${baseUrl}/tt-insights`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${key}`
+            },
+            body: JSON.stringify({
+                advertiser_id: client.tiktok_advertiser_id,
+                level: 'campaign',
+                granularity: 'TOTAL'
+            })
+        })
+        if (!res.ok) return null
+        const data = await res.json()
+        const rows = data[0]?.total_stats?.[0]?.total_stat?.breakdown_stats?.campaign || []
+
+        let spend = 0, revenue = 0
+        rows.forEach((r: any) => {
+            spend += r.stats.spend
+            revenue += r.stats.conversion_purchases_value
+        })
+        return { spend, revenue, campaigns: rows }
+    } catch { return null }
+}
+
+async function fetchFacebook(client: any, baseUrl: string, key: string) {
+    if (!client.facebook_ad_account_id || !client.facebook_access_token) return null
+    try {
+        const res = await fetch(`${baseUrl}/fb-insights`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${key}`
+            },
+            body: JSON.stringify({
+                ad_account_id: client.facebook_ad_account_id,
+                access_token: client.facebook_access_token,
+                level: 'campaign',
+                granularity: 'TOTAL'
+            })
+        })
+        if (!res.ok) return null
+        const data = await res.json()
+        const rows = data[0]?.total_stats?.[0]?.total_stat?.breakdown_stats?.campaign || []
+
+        let spend = 0, revenue = 0
+        rows.forEach((r: any) => {
+            spend += r.stats.spend
+            revenue += r.stats.conversion_purchases_value
+        })
+        return { spend, revenue, campaigns: rows }
+    } catch { return null }
+}
+
+// --- Helpers ---
+
+function blendMetrics(client: any, snap: any, tiktok: any, fb: any) {
+    const totalSpend = (snap?.spend || 0) + (tiktok?.spend || 0) + (fb?.spend || 0)
+    const totalRevenue = (snap?.revenue || 0) + (tiktok?.revenue || 0) + (fb?.revenue || 0)
+    const roas = totalSpend > 0 ? totalRevenue / totalSpend : 0
+
+    // Determine Platforms
+    const activePlatforms = []
+    const platformRoas = []
+
+    // Normalize Micros to Standard Units (Divide by 1,000,000)
+    const normalize = (val: number) => (val || 0) / 1000000
+
+    if (snap) {
+        activePlatforms.push('snapchat')
+        platformRoas.push({ name: 'Snapchat', roas: calcRoas(snap.revenue, snap.spend), spend: normalize(snap.spend) })
+    }
+    if (tiktok) {
+        activePlatforms.push('tiktok')
+        platformRoas.push({ name: 'TikTok', roas: calcRoas(tiktok.revenue, tiktok.spend), spend: normalize(tiktok.spend) })
+    }
+    if (fb) {
+        activePlatforms.push('facebook')
+        platformRoas.push({ name: 'Facebook', roas: calcRoas(fb.revenue, fb.spend), spend: normalize(fb.spend) })
+    }
+
+    // Best Platform
+    const bestPlatform = platformRoas.sort((a, b) => b.roas - a.roas)[0] || null
+
+    return {
+        id: client.id,
+        name: client.name,
+        spend: normalize(totalSpend),
+        revenue: normalize(totalRevenue),
+        roas,
+        activePlatforms,
+        bestPlatform,
+        breakdown: { snap, tiktok, fb }
+    }
+}
+
+function calcRoas(rev: number, spend: number) {
+    return spend > 0 ? rev / spend : 0
+}
+
+function calculateQuickStats(clients: any[]) {
     const totalSpend = clients.reduce((sum, c) => sum + c.spend, 0)
-    if (totalSpend === 0) return 0
-
-    const weightedSum = clients.reduce((sum, c) => {
-        return sum + (c.roas * c.spend)
-    }, 0)
-
-    return weightedSum / totalSpend
+    const totalRevenue = clients.reduce((sum, c) => sum + c.revenue, 0)
+    return {
+        totalClients: clients.length,
+        totalCampaigns: 0, // Simplified for now
+        totalSpend,
+        totalRevenue,
+        averageRoas: totalSpend > 0 ? totalRevenue / totalSpend : 0
+    }
 }
 
 function generateInsights(clients: any[]) {
@@ -270,41 +258,34 @@ function generateInsights(clients: any[]) {
     const whatsNotWorking: any[] = []
 
     clients.forEach(client => {
-        // High performers
-        if (client.roas >= 2.5 && client.spend > 0) {
-            whatsWorking.push({
-                type: 'high_performer',
-                client: client.name,
-                campaign: client.topCampaign?.name,
-                metric: 'ROAS',
-                value: client.roas,
-                message: `${client.name} achieving strong ${client.roas.toFixed(1)} ROAS`
-            })
-        }
-
-        // Underperformers
-        if (client.roas < 1.5 && client.spend > 1000) {
+        // Needs Attention
+        if (client.roas < 1.0 && client.spend > 500) { // < 1 ROAS & > 500 USD spend
             whatsNotWorking.push({
                 type: 'underperformer',
                 client: client.name,
                 metric: 'ROAS',
                 value: client.roas,
-                message: `${client.name} below target with ${client.roas.toFixed(1)} ROAS`,
-                recommendation: 'Review campaign settings and creative performance'
+                message: `${client.name} has critical ROAS (${client.roas.toFixed(2)}) with significant spend.`
             })
         }
 
-        // Scale opportunities
-        if (client.roas > 2.0 && client.spend > 5000) {
+        // Top Performer
+        if (client.roas > 2.0 && client.spend > 500) {
             whatsWorking.push({
-                type: 'scale_opportunity',
+                type: 'high_performer',
                 client: client.name,
-                metric: 'Spend Efficiency',
-                value: client.spend,
-                message: `${client.name} efficiently scaling with SAR ${client.spend.toLocaleString()} spend`
+                metric: 'ROAS',
+                value: client.roas,
+                message: `${client.name} is crushing it with ${client.roas.toFixed(2)} ROAS across all platforms.`
             })
         }
     })
 
     return { whatsWorking, whatsNotWorking }
+}
+
+function emptyResponse() {
+    return new Response(JSON.stringify({ quickStats: {}, clients: [], insights: {} }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
 }

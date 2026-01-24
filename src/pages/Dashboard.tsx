@@ -56,9 +56,9 @@ export const Dashboard: React.FC = () => {
     };
 
     const formatCurrency = (amount: number): string => {
-        return new Intl.NumberFormat('ar-SA', {
+        return new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'SAR',
+            currency: 'USD',
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         }).format(amount);
@@ -67,7 +67,7 @@ export const Dashboard: React.FC = () => {
     if (loading) {
         return (
             <div className={styles.dashboard}>
-                <div className={styles.loading}>Loading dashboard...</div>
+                <div className={styles.loading}>Loading dashboard data from Snap, TikTok, Facebook...</div>
             </div>
         );
     }
@@ -94,7 +94,7 @@ export const Dashboard: React.FC = () => {
             <div className={styles.header}>
                 <div>
                     <h1 className={styles.title}>{t('dashboard.title')}</h1>
-                    <p className={styles.subtitle}>Campaign Performance Overview - Last 30 Days</p>
+                    <p className={styles.subtitle}>Campaign Performance Overview - Lifetime</p>
                 </div>
                 <Button
                     onClick={handleRefresh}
@@ -129,22 +129,14 @@ export const Dashboard: React.FC = () => {
                     <div className={styles.statValue}>{formatCurrency(dashboardData.quickStats.totalRevenue)}</div>
                 </Card>
                 <Card className={styles.statCard}>
-                    <div className={styles.statLabel}>Average ROAS</div>
+                    <div className={styles.statLabel}>Blended ROAS</div>
                     <div className={`${styles.statValue} ${styles.roasValue}`}>
                         {dashboardData.quickStats.averageRoas.toFixed(2)}
                     </div>
                 </Card>
             </div>
 
-            {/* AI Summary */}
-            {dashboardData.aiSummary && (
-                <AIInsightsSummary summary={dashboardData.aiSummary} />
-            )}
-
-            {/* Performance Insights */}
-            <PerformanceInsights insights={dashboardData.insights} />
-
-            {/* Client Performance Table */}
+            {/* Client Performance Table - HERO */}
             <div className={styles.tableSection}>
                 <h2 className={styles.sectionTitle}>Client Performance</h2>
                 <ClientPerformanceTable
@@ -152,6 +144,14 @@ export const Dashboard: React.FC = () => {
                     loading={loading}
                 />
             </div>
+
+            {/* Performance Insights */}
+            <PerformanceInsights insights={dashboardData.insights} />
+
+            {/* AI Summary */}
+            {dashboardData.aiSummary && (
+                <AIInsightsSummary summary={dashboardData.aiSummary} />
+            )}
         </div>
     );
 };
