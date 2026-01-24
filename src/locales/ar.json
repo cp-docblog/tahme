@@ -78,7 +78,9 @@
             "connect": "ربط",
             "snapchatDescription": "اربط حسابك الإعلاني في سناب شات لإدارة وتحليل حملاتك مباشرة من لوحة التحكم.",
             "tiktokDescription": "تكامل إعلانات تيك توك قادم قريباً. ترقبوا التحديثات!",
-            "facebookDescription": "اربط حسابك الإعلاني في فيسبوك لإدارة وتحليل حملاتك مباشرة من لوحة التحكم."
+            "facebookDescription": "اربط حسابك الإعلاني في فيسبوك لإدارة وتحليل حملاتك مباشرة من لوحة التحكم.",
+            "facebookManualDescription": "اربط حسابك الإعلاني في فيسبوك يدوياً عن طريق إدخال معرف الحساب والرمز في إعدادات العميل المحلية.",
+            "manualConfig": "تكوين في إعدادات العميل"
         }
     },
     "newClient": {
@@ -106,13 +108,17 @@
             "facebookPassword": "كلمة المرور Facebook",
             "facebookAccountId": "معرف حساب Facebook الإعلاني",
             "facebookAccountName": "اسم حساب Facebook الإعلاني",
-            "facebookAccessToken": "رمز وصول Facebook"
+            "facebookAccessToken": "رمز وصول Facebook",
+            "tiktokAdvertiser": "معلن TikTok"
         },
         "actions": {
             "save": "حفظ العميل",
             "cancel": "إلغاء"
         },
         "selectAdAccount": "اختر حساب إعلانات",
+        "selectTiktokAdvertiser": "اختر معلن TikTok",
+        "connectTiktokFirst": "قم بربط TikTok أولاً",
+        "connectTiktokOnIntegrations": "يرجى ربط TikTok في صفحة التكاملات أولاً",
         "adAccountStatus": {
             "active": "نشط",
             "inactive": "غير نشط"
@@ -222,7 +228,8 @@
         "search": "بحث",
         "filter": "فلتر",
         "actions": "الإجراءات",
-        "back": "رجوع"
+        "back": "رجوع",
+        "manualIntegration": "تكامل يدوي"
     },
     "reports": {
         "adPerformance": "أداء الإعلان",

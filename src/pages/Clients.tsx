@@ -28,6 +28,8 @@ const FacebookIcon = () => (
 
 const SNAPCHAT_OAUTH_URL = 'https://accounts.snapchat.com/login/oauth2/authorize?client_id=887c761d-506d-4e30-ab21-30a4d9b647b2&redirect_uri=https%3A%2F%2Faibackend.cp-devcode.com%2Fwebhook%2Fsnapchat-auth&response_type=code&scope=snapchat-marketing-api';
 
+const TIKTOK_OAUTH_URL = 'https://business-api.tiktok.com/portal/auth?app_id=7596881349719949313&state=your_custom_params&redirect_uri=https://aibackend.cp-devcode.com/webhook/tash-tiktok-at';
+
 interface Client {
     id: string;
     name: string;
@@ -101,51 +103,55 @@ export const Clients: React.FC = () => {
                         </p>
                         <Button
                             className={styles.connectButton}
-                            onClick={() => window.location.href = SNAPCHAT_OAUTH_URL}
+                            onClick={() => window.open(SNAPCHAT_OAUTH_URL, '_blank')}
                         >
                             {t('clients.integrations.connect')}
                         </Button>
                     </Card>
 
-                    {/* TikTok Integration - Coming Soon */}
-                    <Card className={`${styles.integrationCard} ${styles.comingSoon}`}>
+                    {/* TikTok Integration - Available */}
+                    <Card className={`${styles.integrationCard} ${styles.available}`}>
                         <div className={styles.integrationHeader}>
                             <div className={`${styles.integrationIcon} ${styles.tiktok}`}>
                                 <TikTokIcon />
                             </div>
                             <div className={styles.integrationInfo}>
                                 <h3 className={styles.integrationName}>TikTok</h3>
-                                <span className={`${styles.integrationBadge} ${styles.comingSoonBadge}`}>
-                                    {t('clients.integrations.comingSoon')}
+                                <span className={`${styles.integrationBadge} ${styles.availableBadge}`}>
+                                    {t('clients.integrations.available')}
                                 </span>
                             </div>
                         </div>
                         <p className={styles.integrationDescription}>
                             {t('clients.integrations.tiktokDescription')}
                         </p>
-                        <Button className={styles.connectButton} disabled>
+                        <Button
+                            className={styles.connectButton}
+                            onClick={() => window.open(TIKTOK_OAUTH_URL, '_blank')}
+                        >
                             {t('clients.integrations.connect')}
                         </Button>
                     </Card>
 
                     {/* Facebook Integration - Coming Soon */}
-                    <Card className={`${styles.integrationCard} ${styles.comingSoon}`}>
+                    {/* Facebook Integration - Manual */}
+                    <Card className={`${styles.integrationCard} ${styles.available}`}>
                         <div className={styles.integrationHeader}>
                             <div className={`${styles.integrationIcon} ${styles.facebook}`}>
                                 <FacebookIcon />
                             </div>
                             <div className={styles.integrationInfo}>
                                 <h3 className={styles.integrationName}>Facebook</h3>
-                                <span className={`${styles.integrationBadge} ${styles.comingSoonBadge}`}>
-                                    {t('clients.integrations.comingSoon')}
+                                <span className={`${styles.integrationBadge} ${styles.comingSoonBadge}`} style={{ background: 'rgba(24, 119, 242, 0.15)', color: '#1877F2', borderColor: 'rgba(24, 119, 242, 0.3)' }}>
+                                    {t('common.manualIntegration') || 'Manual Integration'}
                                 </span>
                             </div>
                         </div>
                         <p className={styles.integrationDescription}>
-                            {t('clients.integrations.facebookDescription')}
+                            {t('clients.integrations.facebookManualDescription') || 'Connect your Facebook Ads account manually by entering your account ID and token in local client settings.'}
                         </p>
                         <Button className={styles.connectButton} disabled>
-                            {t('clients.integrations.connect')}
+                            {t('clients.integrations.manualConfig') || 'Configure in Client Settings'}
                         </Button>
                     </Card>
                 </div>

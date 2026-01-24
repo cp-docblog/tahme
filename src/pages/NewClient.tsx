@@ -8,6 +8,7 @@ import { Card } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { Input } from '../components/UI/Input';
 import { AdAccountSelector } from '../components/Clients/AdAccountSelector';
+import { TikTokAdvertiserSelector } from '../components/Clients/TikTokAdvertiserSelector';
 import styles from './NewClient.module.css';
 
 export const NewClient: React.FC = () => {
@@ -24,13 +25,13 @@ export const NewClient: React.FC = () => {
         contact_name: '',
         contact_email: '',
         contact_phone: '',
-        // Credentials
-        tiktok_username: '',
-        tiktok_password: '',
+        // TikTok Credentials
+        tiktok_advertiser_id: '',
+        tiktok_advertiser_name: '',
+        // Snapchat Credentials
         snapchat_ad_account_id: '',
         snapchat_ad_account_name: '',
-        facebook_username: '',
-        facebook_password: '',
+        // Facebook Credentials
         facebook_ad_account_id: '',
         facebook_ad_account_name: '',
         facebook_access_token: '',
@@ -62,12 +63,10 @@ export const NewClient: React.FC = () => {
                     contact_name: clientData.contact_name || '',
                     contact_email: clientData.contact_email || '',
                     contact_phone: clientData.contact_phone || '',
-                    tiktok_username: clientData.tiktok_username || '',
-                    tiktok_password: clientData.tiktok_password || '',
+                    tiktok_advertiser_id: clientData.tiktok_advertiser_id || '',
+                    tiktok_advertiser_name: clientData.tiktok_advertiser_name || '',
                     snapchat_ad_account_id: clientData.snapchat_ad_account_id || '',
                     snapchat_ad_account_name: clientData.snapchat_ad_account_name || '',
-                    facebook_username: clientData.facebook_username || '',
-                    facebook_password: clientData.facebook_password || '',
                     facebook_ad_account_id: clientData.facebook_ad_account_id || '',
                     facebook_ad_account_name: clientData.facebook_ad_account_name || '',
                     facebook_access_token: clientData.facebook_access_token || '',
@@ -95,12 +94,10 @@ export const NewClient: React.FC = () => {
                     contact_name: formData.contact_name || null,
                     contact_email: formData.contact_email || null,
                     contact_phone: formData.contact_phone || null,
-                    tiktok_username: formData.tiktok_username || null,
-                    tiktok_password: formData.tiktok_password || null,
+                    tiktok_advertiser_id: formData.tiktok_advertiser_id || null,
+                    tiktok_advertiser_name: formData.tiktok_advertiser_name || null,
                     snapchat_ad_account_id: formData.snapchat_ad_account_id || null,
                     snapchat_ad_account_name: formData.snapchat_ad_account_name || null,
-                    facebook_username: formData.facebook_username || null,
-                    facebook_password: formData.facebook_password || null,
                     facebook_ad_account_id: formData.facebook_ad_account_id || null,
                     facebook_ad_account_name: formData.facebook_ad_account_name || null,
                     facebook_access_token: formData.facebook_access_token || null,
@@ -121,12 +118,10 @@ export const NewClient: React.FC = () => {
                     contact_name: formData.contact_name || null,
                     contact_email: formData.contact_email || null,
                     contact_phone: formData.contact_phone || null,
-                    tiktok_username: formData.tiktok_username || null,
-                    tiktok_password: formData.tiktok_password || null,
+                    tiktok_advertiser_id: formData.tiktok_advertiser_id || null,
+                    tiktok_advertiser_name: formData.tiktok_advertiser_name || null,
                     snapchat_ad_account_id: formData.snapchat_ad_account_id || null,
                     snapchat_ad_account_name: formData.snapchat_ad_account_name || null,
-                    facebook_username: formData.facebook_username || null,
-                    facebook_password: formData.facebook_password || null,
                     facebook_ad_account_id: formData.facebook_ad_account_id || null,
                     facebook_ad_account_name: formData.facebook_ad_account_name || null,
                     facebook_access_token: formData.facebook_access_token || null,
@@ -219,24 +214,21 @@ export const NewClient: React.FC = () => {
                     </div>
                 </Card>
 
-                <Card className={`${styles.section} ${styles.platformSection} comingSoon`} data-coming-soon-text={t('newClient.comingSoon')}>
+                <Card className={`${styles.section} ${styles.platformSection}`}>
                     <h2 className={styles.sectionTitle}>
                         <Video size={20} style={{ marginInlineEnd: '0.5rem' }} />
                         TikTok
                     </h2>
                     <div className={styles.formGrid}>
-                        <Input
-                            label={t('newClient.fields.tiktokUsername')}
-                            value={formData.tiktok_username}
-                            onChange={(e) => handleChange('tiktok_username', e.target.value)}
-                            disabled
-                        />
-                        <Input
-                            label={t('newClient.fields.tiktokPassword')}
-                            type="password"
-                            value={formData.tiktok_password}
-                            onChange={(e) => handleChange('tiktok_password', e.target.value)}
-                            disabled
+                        <TikTokAdvertiserSelector
+                            value={formData.tiktok_advertiser_id}
+                            onChange={(id, name) => {
+                                setFormData(prev => ({
+                                    ...prev,
+                                    tiktok_advertiser_id: id,
+                                    tiktok_advertiser_name: name,
+                                }));
+                            }}
                         />
                     </div>
                 </Card>

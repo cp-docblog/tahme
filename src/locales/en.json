@@ -78,7 +78,9 @@
             "connect": "Connect",
             "snapchatDescription": "Connect your Snapchat Ads account to manage and analyze your campaigns directly from the dashboard.",
             "tiktokDescription": "TikTok Ads integration coming soon. Stay tuned for updates!",
-            "facebookDescription": "Connect your Facebook Ads account to manage and analyze your campaigns directly from the dashboard."
+            "facebookDescription": "Connect your Facebook Ads account to manage and analyze your campaigns directly from the dashboard.",
+            "facebookManualDescription": "Connect your Facebook Ads account manually by entering your account ID and token in local client settings.",
+            "manualConfig": "Configure in Client Settings"
         }
     },
     "newClient": {
@@ -106,13 +108,17 @@
             "facebookPassword": "Facebook Password",
             "facebookAccountId": "Facebook Ad Account ID",
             "facebookAccountName": "Facebook Ad Account Name",
-            "facebookAccessToken": "Facebook Access Token"
+            "facebookAccessToken": "Facebook Access Token",
+            "tiktokAdvertiser": "TikTok Advertiser"
         },
         "actions": {
             "save": "Save Client",
             "cancel": "Cancel"
         },
         "selectAdAccount": "Select an ad account",
+        "selectTiktokAdvertiser": "Select a TikTok advertiser",
+        "connectTiktokFirst": "Connect TikTok first",
+        "connectTiktokOnIntegrations": "Please connect TikTok on the Integrations page first",
         "adAccountStatus": {
             "active": "Active",
             "inactive": "Inactive"
@@ -222,7 +228,8 @@
         "search": "Search",
         "filter": "Filter",
         "actions": "Actions",
-        "back": "Back"
+        "back": "Back",
+        "manualIntegration": "Manual Integration"
     },
     "reports": {
         "adPerformance": "Ad Performance",

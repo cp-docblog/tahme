@@ -1,0 +1,346 @@
+.adReport {
+    width: 100%;
+}
+
+.reportHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.adName {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: var(--spacing-xs);
+}
+
+.adId {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    font-family: monospace;
+}
+
+.metricsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.metricCard {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+}
+
+.metricIcon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.metricContent {
+    flex: 1;
+}
+
+.metricLabel {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+.metricValue {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 0.25rem;
+}
+
+.metricSubtext {
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+}
+
+.section {
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-xl);
+}
+
+.sectionTitle {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Media Preview Styles */
+.mediaSection {
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-xl);
+}
+
+.mediaContainer {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.mediaPlayer {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+    cursor: pointer;
+    transition: transform var(--transition-base);
+}
+
+.mediaPlayer:not(.playing):hover {
+    transform: scale(1.02);
+}
+
+.mediaPlayer.playing {
+    cursor: default;
+}
+
+.videoElement {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+}
+
+.playOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    transition: background var(--transition-base);
+}
+
+.mediaPlayer:hover .playOverlay {
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.playButton {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-base);
+}
+
+.mediaPlayer:hover .playButton {
+    background: var(--color-primary);
+    transform: scale(1.1);
+}
+
+.playButton svg {
+    margin-left: 4px;
+}
+
+.clickToPlay {
+    font-size: 0.875rem;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.videoLabel {
+    position: absolute;
+    bottom: var(--spacing-sm);
+    left: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.mediaSkeleton {
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--color-border);
+}
+
+.skeletonPulse {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            var(--color-border) 0%,
+            var(--color-surface) 50%,
+            var(--color-border) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.mediaPlaceholder {
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    background: var(--color-surface);
+    border: 2px dashed var(--color-border);
+    color: var(--color-text-secondary);
+}
+
+.funnelContainer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.funnelStep {
+    width: 100%;
+}
+
+.funnelBar {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    border-radius: 8px;
+    color: white;
+    transition: all var(--transition-base);
+    min-width: 200px;
+}
+
+.funnelBar:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow-md);
+}
+
+.funnelBar span {
+    flex: 1;
+    font-weight: 500;
+}
+
+.funnelBar strong {
+    font-weight: 700;
+    font-size: 1.125rem;
+}
+
+.metricsTable {
+    display: flex;
+    flex-direction: column;
+}
+
+.tableRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md) 0;
+}
+
+.tableLabel {
+    font-size: 0.9375rem;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+}
+
+.tableValue {
+    font-size: 1rem;
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.tableDivider {
+    height: 1px;
+    background: var(--color-border);
+    margin: var(--spacing-sm) 0;
+}
+
+.loadingState,
+.errorState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-2xl);
+    text-align: center;
+    color: var(--color-text-secondary);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: var(--spacing-md);
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.errorState {
+    color: var(--color-error);
+}
+
+@media (max-width: 768px) {
+    .metricsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .funnelBar {
+        font-size: 0.875rem;
+    }
+
+    .funnelBar strong {
+        font-size: 1rem;
+    }
+}

@@ -15,9 +15,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
     const menuItems = [
         { path: '/', label: t('nav.dashboard'), icon: LayoutDashboard },
+        { path: '/campaigns', label: t('nav.campaigns'), icon: TrendingUp },
         { path: '/users', label: t('nav.users'), icon: Users },
         { path: '/clients', label: t('nav.clients'), icon: Building2 },
-        { path: '/campaigns', label: t('nav.campaigns'), icon: TrendingUp },
     ];
 
     return (

@@ -13,6 +13,10 @@ import { FbCampaignsList } from '../components/Campaigns/FbCampaignsList';
 import { FbAdSetsList } from '../components/Campaigns/FbAdSetsList';
 import { FbAdsList } from '../components/Campaigns/FbAdsList';
 import { FbAdReport } from '../components/Campaigns/FbAdReport';
+import { TtCampaignsList } from '../components/Campaigns/TtCampaignsList';
+import { TtAdGroupsList } from '../components/Campaigns/TtAdGroupsList';
+import { TtAdsList } from '../components/Campaigns/TtAdsList';
+import { TtAdReport } from '../components/Campaigns/TtAdReport';
 import styles from './Campaigns.module.css';
 
 interface Client {
@@ -23,6 +27,8 @@ interface Client {
     facebook_ad_account_id: string | null;
     facebook_ad_account_name: string | null;
     facebook_access_token: string | null;
+    tiktok_advertiser_id: string | null;
+    tiktok_advertiser_name: string | null;
 }
 
 interface Campaign {
@@ -66,7 +72,7 @@ export const Campaigns: React.FC = () => {
         try {
             const { data, error } = await supabase
                 .from('clients')
-                .select('id, name, snapchat_ad_account_id, snapchat_ad_account_name, facebook_ad_account_id, facebook_ad_account_name, facebook_access_token')
+                .select('id, name, snapchat_ad_account_id, snapchat_ad_account_name, facebook_ad_account_id, facebook_ad_account_name, facebook_access_token, tiktok_advertiser_id, tiktok_advertiser_name')
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -170,6 +176,12 @@ export const Campaigns: React.FC = () => {
     const showFbAdsList = selectedAdSquad && selectedPlatform === 'facebook' && selectedClient?.facebook_ad_account_id && !selectedAd;
     const showFbAdReport = selectedAd && selectedPlatform === 'facebook' && selectedClient?.facebook_ad_account_id;
 
+    // TikTok views
+    const showTtCampaignsList = selectedPlatform === 'tiktok' && selectedClient?.tiktok_advertiser_id && !selectedCampaign;
+    const showTtAdGroupsList = selectedCampaign && selectedPlatform === 'tiktok' && selectedClient?.tiktok_advertiser_id && !selectedAdSquad;
+    const showTtAdsList = selectedAdSquad && selectedPlatform === 'tiktok' && selectedClient?.tiktok_advertiser_id && !selectedAd;
+    const showTtAdReport = selectedAd && selectedPlatform === 'tiktok' && selectedClient?.tiktok_advertiser_id;
+
     return (
         <div className={styles.campaigns}>
             {/* Clients List View */}
@@ -211,6 +223,11 @@ export const Campaigns: React.FC = () => {
                                     {client.facebook_ad_account_name && (
                                         <span className={styles.adAccountBadge}>
                                             Facebook: {client.facebook_ad_account_name}
+                                        </span>
+                                    )}
+                                    {client.tiktok_advertiser_name && (
+                                        <span className={styles.adAccountBadge}>
+                                            TikTok: {client.tiktok_advertiser_name}
                                         </span>
                                     )}
                                     <ChevronRight size={20} className={styles.arrow} />
@@ -406,6 +423,89 @@ export const Campaigns: React.FC = () => {
                         adName={selectedAd.name}
                         adAccountId={selectedClient.facebook_ad_account_id}
                         accessToken={selectedClient.facebook_access_token}
+                    />
+                </div>
+            )}
+
+            {/* TikTok Campaigns List View */}
+            {selectedPlatform === 'tiktok' && selectedClient?.tiktok_advertiser_id && (
+                <div style={{ display: showTtCampaignsList ? 'block' : 'none' }}>
+                    <div className={styles.header}>
+                        <div>
+                            {renderBreadcrumb()}
+                            <h1 className={styles.title}>{t('campaigns.campaignsFor')} {selectedClient.name}</h1>
+                            <p className={styles.subtitle}>{selectedPlatform}</p>
+                        </div>
+                        <Button variant="outline" onClick={handleBack}>
+                            {t('common.back')}
+                        </Button>
+                    </div>
+                    <TtCampaignsList
+                        clientId={selectedClient.id}
+                        advertiserId={selectedClient.tiktok_advertiser_id}
+                        onSelectCampaign={handleSelectCampaign}
+                    />
+                </div>
+            )}
+
+            {/* TikTok Ad Groups List View */}
+            {selectedCampaign && selectedPlatform === 'tiktok' && selectedClient?.tiktok_advertiser_id && (
+                <div style={{ display: showTtAdGroupsList ? 'block' : 'none' }}>
+                    <div className={styles.header}>
+                        <div>
+                            {renderBreadcrumb()}
+                            <h1 className={styles.title}>{t('campaigns.adGroupsInCampaign')}</h1>
+                            <p className={styles.subtitle}>{selectedCampaign.name}</p>
+                        </div>
+                        <Button variant="outline" onClick={handleBack}>
+                            {t('common.back')}
+                        </Button>
+                    </div>
+                    <TtAdGroupsList
+                        advertiserId={selectedClient.tiktok_advertiser_id}
+                        campaignId={selectedCampaign.id}
+                        onSelectAdGroup={handleSelectAdSquad}
+                    />
+                </div>
+            )}
+
+            {/* TikTok Ads List View */}
+            {selectedAdSquad && selectedPlatform === 'tiktok' && selectedClient?.tiktok_advertiser_id && (
+                <div style={{ display: showTtAdsList ? 'block' : 'none' }}>
+                    <div className={styles.header}>
+                        <div>
+                            {renderBreadcrumb()}
+                            <h1 className={styles.title}>{t('campaigns.adsInAdGroup')}</h1>
+                            <p className={styles.subtitle}>{selectedAdSquad.name}</p>
+                        </div>
+                        <Button variant="outline" onClick={handleBack}>
+                            {t('common.back')}
+                        </Button>
+                    </div>
+                    <TtAdsList
+                        advertiserId={selectedClient.tiktok_advertiser_id}
+                        adgroupId={selectedAdSquad.id}
+                        onSelectAd={handleSelectAd}
+                    />
+                </div>
+            )}
+
+            {/* TikTok Ad Report View */}
+            {selectedAd && selectedPlatform === 'tiktok' && selectedClient?.tiktok_advertiser_id && (
+                <div style={{ display: showTtAdReport ? 'block' : 'none' }}>
+                    <div className={styles.header}>
+                        <div>
+                            {renderBreadcrumb()}
+                            <h1 className={styles.title}>{t('reports.adPerformance')}</h1>
+                        </div>
+                        <Button variant="outline" onClick={handleBack}>
+                            {t('common.back')}
+                        </Button>
+                    </div>
+                    <TtAdReport
+                        adId={selectedAd.id}
+                        adName={selectedAd.name}
+                        advertiserId={selectedClient.tiktok_advertiser_id}
                     />
                 </div>
             )}

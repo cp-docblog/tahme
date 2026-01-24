@@ -25,7 +25,7 @@ export const PlatformCards: React.FC<PlatformCardsProps> = ({ onSelectPlatform, 
             name: 'TikTok',
             icon: Video,
             color: '#000000',
-            available: false,
+            available: true,
         },
         {
             id: 'facebook' as const,
