@@ -121,7 +121,10 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
             const response = await fetch(`${webhookUrl}/tash-snap-media-analysis`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ad_id: adId })
+                body: JSON.stringify({
+                    ad_id: adId,
+                    language: i18n.language
+                })
             });
 
             if (!response.ok) {

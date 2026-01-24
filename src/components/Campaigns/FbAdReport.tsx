@@ -334,7 +334,8 @@ export const FbAdReport: React.FC<FbAdReportProps> = ({ adId, adName, adAccountI
                     ad_id: adId,
                     platform: 'facebook',
                     media_url: mediaUrl,
-                    is_video: mediaPreview.isVideo
+                    is_video: mediaPreview.isVideo,
+                    language: i18n.language
                 })
             });
 

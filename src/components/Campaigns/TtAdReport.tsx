@@ -332,7 +332,8 @@ export const TtAdReport: React.FC<TtAdReportProps> = ({ adId, adName, advertiser
                     ad_id: adId,
                     platform: 'tiktok',
                     media_url: mediaUrl,
-                    is_video: mediaPreview.isVideo
+                    is_video: mediaPreview.isVideo,
+                    language: i18n.language
                 })
             });
 
