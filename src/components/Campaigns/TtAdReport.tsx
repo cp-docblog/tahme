@@ -221,7 +221,9 @@ export const TtAdReport: React.FC<TtAdReportProps> = ({ adId, adName, advertiser
     };
 
     const calculateROAS = () => {
-        if (!stats || !stats.spend || stats.spend === 0 || !stats.conversion_purchases_value) return 0;
+        if (!stats) return 0;
+        if ((stats as any).roas) return (stats as any).roas;
+        if (!stats.spend || stats.spend === 0 || !stats.conversion_purchases_value) return 0;
         return stats.conversion_purchases_value / stats.spend;
     };
 
@@ -267,7 +269,7 @@ export const TtAdReport: React.FC<TtAdReportProps> = ({ adId, adName, advertiser
                     clicks: (stats as any).clicks || 0,
                     conversion_purchases: stats.conversion_purchases || 0,
                     conversion_purchases_value: stats.conversion_purchases_value || 0,
-                    roas: calculateROAS(),
+                    roas: (stats as any).roas || calculateROAS(),
                     cpp: calculateCPP(),
                     cpm: calculateCPM(),
                     ctr: calculateCTR()

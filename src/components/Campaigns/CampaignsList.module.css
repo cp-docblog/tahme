@@ -49,7 +49,28 @@
 .campaignCard {
     padding: var(--spacing-lg);
     cursor: pointer;
-    transition: all var(--transition-base);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(var(--color-surface-rgb, 255, 255, 255), 0.7);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(var(--color-primary-rgb), 0.1);
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.campaignCard:hover {
+    transform: translateY(-4px);
+    background: rgba(var(--color-surface-rgb, 255, 255, 255), 0.95);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.06);
+    border-color: rgba(var(--color-primary-rgb), 0.3);
+}
+
+[data-theme="dark"] .campaignCard {
+    background: rgba(30, 41, 59, 0.6);
+}
+
+[data-theme="dark"] .campaignCard:hover {
+    background: rgba(30, 41, 59, 0.9);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
 }
 
 .campaignHeader {

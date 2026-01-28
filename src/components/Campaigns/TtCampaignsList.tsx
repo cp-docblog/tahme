@@ -126,7 +126,7 @@ export const TtCampaignsList: React.FC<TtCampaignsListProps> = ({
 
     const formatBudget = (budgetMicro?: number) => {
         if (!budgetMicro) return null;
-        return `$${(budgetMicro / 1000000).toFixed(0)}`;
+        return `SAR ${(budgetMicro / 1000000).toFixed(0)}`;
     };
 
     const handleAskAI = async () => {
@@ -196,15 +196,15 @@ export const TtCampaignsList: React.FC<TtCampaignsListProps> = ({
     };
 
     // Filter campaigns based on active tab
-    const activeCampaigns = campaigns.filter(c => c.status === 'ACTIVE');
-    const pausedCampaigns = campaigns.filter(c => c.status === 'PAUSED' || c.status !== 'ACTIVE');
+    const activeCampaigns = campaigns.filter(c => c.status === 'ACTIVE' || c.status === 'ENABLE');
+    const pausedCampaigns = campaigns.filter(c => c.status === 'PAUSED' || c.status === 'DISABLE' || (c.status !== 'ACTIVE' && c.status !== 'ENABLE'));
 
     // Helper function to get metric value
     const getMetricValue = (stats: any, metric: SortMetric): number => {
         if (!stats) return 0;
         switch (metric) {
             case 'roas':
-                return stats.spend > 0 ? stats.conversion_purchases_value / stats.spend : 0;
+                return stats.roas || (stats.spend > 0 ? stats.conversion_purchases_value / stats.spend : 0);
             case 'purchases':
                 return stats.conversion_purchases || 0;
             case 'costPerPurchase':
@@ -329,7 +329,7 @@ export const TtCampaignsList: React.FC<TtCampaignsListProps> = ({
                             const isTopPerformer = activeTab === 'top' && campaign.id === topPerformer?.id;
                             const stats = performanceStats.get(campaign.id);
                             const roas = isTopPerformer && stats && stats.spend > 0
-                                ? stats.conversion_purchases_value / stats.spend
+                                ? (stats.roas || (stats.conversion_purchases_value / stats.spend))
                                 : null;
 
                             return (
@@ -349,12 +349,12 @@ export const TtCampaignsList: React.FC<TtCampaignsListProps> = ({
                                     <div className={styles.campaignHeader}>
                                         <h3 className={styles.campaignName}>{campaign.name}</h3>
                                         <span
-                                            className={`${styles.statusBadge} ${campaign.status === 'ACTIVE' ? styles.active :
-                                                campaign.status === 'PAUSED' ? styles.paused :
+                                            className={`${styles.statusBadge} ${(campaign.status === 'ACTIVE' || campaign.status === 'ENABLE') ? styles.active :
+                                                (campaign.status === 'PAUSED' || campaign.status === 'DISABLE') ? styles.paused :
                                                     styles.inactive
                                                 }`}
                                         >
-                                            {campaign.status === 'PAUSED' ? 'PAUSED' : campaign.status}
+                                            {campaign.status === 'PAUSED' || campaign.status === 'DISABLE' ? 'PAUSED' : 'ACTIVE'}
                                         </span>
                                     </div>
 
@@ -373,7 +373,7 @@ export const TtCampaignsList: React.FC<TtCampaignsListProps> = ({
                                                 <div className={styles.detail}>
                                                     <span className={styles.detailLabel}>{t('campaigns.spend')}:</span>
                                                     <span className={styles.detailValue}>
-                                                        ${((stats.spend || 0) / 1000000).toFixed(2)}
+                                                        SAR {((stats.spend || 0) / 1000000).toFixed(2)}
                                                     </span>
                                                 </div>
                                                 <div className={styles.detail}>
@@ -384,16 +384,16 @@ export const TtCampaignsList: React.FC<TtCampaignsListProps> = ({
                                                 </div>
                                                 <div className={styles.detail}>
                                                     <span className={styles.detailLabel}>{t('campaigns.roas')}:</span>
-                                                    <span className={`${styles.detailValue} ${stats.spend > 0 && stats.conversion_purchases_value > 0
-                                                        ? (stats.conversion_purchases_value / stats.spend) >= 2
+                                                    <span className={`${styles.detailValue} ${stats.spend > 0 && (stats.roas || stats.conversion_purchases_value > 0)
+                                                        ? (stats.roas || (stats.conversion_purchases_value / stats.spend)) >= 2
                                                             ? styles.roasGood
-                                                            : (stats.conversion_purchases_value / stats.spend) >= 1
+                                                            : (stats.roas || (stats.conversion_purchases_value / stats.spend)) >= 1
                                                                 ? styles.roasOk
                                                                 : styles.roasPoor
                                                         : ''
                                                         }`}>
-                                                        {stats.spend > 0 && stats.conversion_purchases_value > 0
-                                                            ? `${(stats.conversion_purchases_value / stats.spend).toFixed(2)}x`
+                                                        {stats.spend > 0 && (stats.roas || stats.conversion_purchases_value > 0)
+                                                            ? `${(stats.roas || (stats.conversion_purchases_value / stats.spend)).toFixed(2)}x`
                                                             : 'N/A'}
                                                     </span>
                                                 </div>

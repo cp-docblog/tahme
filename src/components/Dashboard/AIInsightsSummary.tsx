@@ -1,5 +1,6 @@
-import React from 'react';
 import { Sparkles, TrendingUp, AlertCircle, Lightbulb, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Skeleton } from '../UI/Skeleton';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../UI/Card';
 import type { AISummary } from '../../types/dashboard';
 import styles from './AIInsightsSummary.module.css';
@@ -10,6 +11,7 @@ interface AIInsightsSummaryProps {
 }
 
 export const AIInsightsSummary: React.FC<AIInsightsSummaryProps> = ({ summary, loading }) => {
+    const { t } = useTranslation();
     const getInsightIcon = (type: string) => {
         switch (type) {
             case 'positive':
@@ -46,9 +48,13 @@ export const AIInsightsSummary: React.FC<AIInsightsSummaryProps> = ({ summary, l
     if (loading) {
         return (
             <Card className={styles.container}>
-                <div className={styles.loading}>
-                    <Sparkles size={24} className={styles.loadingIcon} />
-                    <span>Generating AI insights...</span>
+                <div style={{ padding: '24px' }}>
+                    <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', alignItems: 'center' }}>
+                        <Skeleton width={40} height={40} borderRadius={12} />
+                        <Skeleton width={200} height={32} />
+                    </div>
+                    <Skeleton width="100%" height={80} style={{ marginBottom: '24px' }} />
+                    <Skeleton width="100%" height={120} borderRadius={12} />
                 </div>
             </Card>
         );
@@ -59,7 +65,7 @@ export const AIInsightsSummary: React.FC<AIInsightsSummaryProps> = ({ summary, l
             <div className={styles.header}>
                 <div className={styles.headerLeft}>
                     <Sparkles size={24} className={styles.aiIcon} />
-                    <h2 className={styles.title}>AI Performance Summary</h2>
+                    <h2 className={styles.title}>{t('dashboard.aiSummary.title')}</h2>
                 </div>
                 {getSentimentIcon()}
             </div>
@@ -69,7 +75,7 @@ export const AIInsightsSummary: React.FC<AIInsightsSummaryProps> = ({ summary, l
             {/* Key Insights */}
             {summary.keyInsights && summary.keyInsights.length > 0 && (
                 <div className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Key Insights</h3>
+                    <h3 className={styles.sectionTitle}>{t('dashboard.aiSummary.keyInsights')}</h3>
                     <div className={styles.insights}>
                         {summary.keyInsights.map((insight, index) => {
                             const Icon = getInsightIcon(insight.type);
@@ -103,7 +109,7 @@ export const AIInsightsSummary: React.FC<AIInsightsSummaryProps> = ({ summary, l
             {/* Recommendations */}
             {summary.recommendations && summary.recommendations.length > 0 && (
                 <div className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Recommended Actions</h3>
+                    <h3 className={styles.sectionTitle}>{t('dashboard.aiSummary.recommendedActions')}</h3>
                     <div className={styles.recommendations}>
                         {summary.recommendations.map((rec, index) => (
                             <div key={index} className={styles.recommendation}>
@@ -115,7 +121,7 @@ export const AIInsightsSummary: React.FC<AIInsightsSummaryProps> = ({ summary, l
                                 </div>
                                 <p className={styles.recReason}>{rec.reason}</p>
                                 {rec.client && (
-                                    <span className={styles.recClient}>Client: {rec.client}</span>
+                                    <span className={styles.recClient}>{t('dashboard.clientPerformance.table.client')}: {rec.client}</span>
                                 )}
                                 {(rec.estimatedImpact || rec.estimatedSavings) && (
                                     <div className={styles.recImpact}>
@@ -126,7 +132,7 @@ export const AIInsightsSummary: React.FC<AIInsightsSummaryProps> = ({ summary, l
                                         )}
                                         {rec.estimatedSavings && (
                                             <span className={styles.impactText}>
-                                                💰 Save: {rec.estimatedSavings}
+                                                💰 {t('dashboard.aiSummary.save')} {rec.estimatedSavings}
                                             </span>
                                         )}
                                     </div>
@@ -140,7 +146,7 @@ export const AIInsightsSummary: React.FC<AIInsightsSummaryProps> = ({ summary, l
             {/* Confidence */}
             <div className={styles.footer}>
                 <span className={styles.confidence}>
-                    AI Confidence: {(summary.confidenceScore * 100).toFixed(0)}%
+                    {t('dashboard.aiSummary.confidence')}: {(summary.confidenceScore * 100).toFixed(0)}%
                 </span>
             </div>
         </Card>

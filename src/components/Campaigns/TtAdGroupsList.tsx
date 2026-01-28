@@ -200,15 +200,15 @@ export const TtAdGroupsList: React.FC<TtAdGroupsListProps> = ({
     };
 
     // Filter ad sets based on active tab
-    const activeAdGroups = adgroups.filter(a => a.status === 'ACTIVE');
-    const pausedAdGroups = adgroups.filter(a => a.status === 'PAUSED' || a.status !== 'ACTIVE');
+    const activeAdGroups = adgroups.filter(a => a.status === 'ACTIVE' || a.status === 'ENABLE');
+    const pausedAdGroups = adgroups.filter(a => a.status === 'PAUSED' || a.status === 'DISABLE' || (a.status !== 'ACTIVE' && a.status !== 'ENABLE'));
 
     // Helper function to get metric value
     const getMetricValue = (stats: any, metric: SortMetric): number => {
         if (!stats) return 0;
         switch (metric) {
             case 'roas':
-                return stats.spend > 0 ? stats.conversion_purchases_value / stats.spend : 0;
+                return stats.roas || (stats.spend > 0 ? stats.conversion_purchases_value / stats.spend : 0);
             case 'purchases':
                 return stats.conversion_purchases || 0;
             case 'costPerPurchase':
@@ -333,7 +333,7 @@ export const TtAdGroupsList: React.FC<TtAdGroupsListProps> = ({
                             const isTopPerformer = activeTab === 'top' && adgroup.id === topPerformer?.id;
                             const stats = performanceStats.get(adgroup.id);
                             const roas = isTopPerformer && stats && stats.spend > 0
-                                ? stats.conversion_purchases_value / stats.spend
+                                ? (stats.roas || (stats.conversion_purchases_value / stats.spend))
                                 : null;
 
                             return (
@@ -353,12 +353,12 @@ export const TtAdGroupsList: React.FC<TtAdGroupsListProps> = ({
                                     <div className={styles.adsquadHeader}>
                                         <h3 className={styles.adsquadName}>{adgroup.name}</h3>
                                         <span
-                                            className={`${styles.statusBadge} ${adgroup.status === 'ACTIVE' ? styles.active :
-                                                adgroup.status === 'PAUSED' ? styles.paused :
+                                            className={`${styles.statusBadge} ${(adgroup.status === 'ACTIVE' || adgroup.status === 'ENABLE') ? styles.active :
+                                                (adgroup.status === 'PAUSED' || adgroup.status === 'DISABLE') ? styles.paused :
                                                     styles.inactive
                                                 }`}
                                         >
-                                            {adgroup.status === 'PAUSED' ? 'PAUSED' : adgroup.status}
+                                            {adgroup.status === 'PAUSED' || adgroup.status === 'DISABLE' ? 'PAUSED' : 'ACTIVE'}
                                         </span>
                                     </div>
 
@@ -388,16 +388,16 @@ export const TtAdGroupsList: React.FC<TtAdGroupsListProps> = ({
                                                 </div>
                                                 <div className={styles.detail}>
                                                     <span className={styles.detailLabel}>{t('campaigns.roas')}:</span>
-                                                    <span className={`${styles.detailValue} ${stats.spend > 0 && stats.conversion_purchases_value > 0
-                                                        ? (stats.conversion_purchases_value / stats.spend) >= 2
+                                                    <span className={`${styles.detailValue} ${stats.spend > 0 && (stats.roas || stats.conversion_purchases_value > 0)
+                                                        ? (stats.roas || (stats.conversion_purchases_value / stats.spend)) >= 2
                                                             ? styles.roasGood
-                                                            : (stats.conversion_purchases_value / stats.spend) >= 1
+                                                            : (stats.roas || (stats.conversion_purchases_value / stats.spend)) >= 1
                                                                 ? styles.roasOk
                                                                 : styles.roasPoor
                                                         : ''
                                                         }`}>
-                                                        {stats.spend > 0 && stats.conversion_purchases_value > 0
-                                                            ? `${(stats.conversion_purchases_value / stats.spend).toFixed(2)}x`
+                                                        {stats.spend > 0 && (stats.roas || stats.conversion_purchases_value > 0)
+                                                            ? `${(stats.roas || (stats.conversion_purchases_value / stats.spend)).toFixed(2)}x`
                                                             : 'N/A'}
                                                     </span>
                                                 </div>
@@ -437,7 +437,7 @@ export const TtAdGroupsList: React.FC<TtAdGroupsListProps> = ({
                     <div>
                         <div className={styles.statLabel}>{t('campaigns.activeAdSquads')}</div>
                         <div className={styles.statValue}>
-                            {adgroups.filter(a => a.status === 'ACTIVE').length}
+                            {activeAdGroups.length}
                         </div>
                     </div>
                 </div>

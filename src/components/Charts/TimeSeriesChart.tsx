@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { TimeseriesDataPoint } from '../../types/metrics';
 import styles from './TimeSeriesChart.module.css';
 
@@ -12,7 +12,7 @@ interface TimeSeriesChartProps {
 export const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({ data, granularity }) => {
     const { t } = useTranslation();
 
-    // Define helper functions BEFORE using them
+    // Helper functions
     const formatTime = (dateString: string, gran: 'DAY' | 'HOUR'): string => {
         const date = new Date(dateString);
         if (gran === 'DAY') {
@@ -21,16 +21,13 @@ export const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({ data, granular
         return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
     };
 
-    const formatCurrency = (value: number) => `$${value.toFixed(0)}`;
-    const formatNumber = (value: number) => value.toLocaleString();
-
-    // Transform data for recharts
+    // Transform data
     const chartData = data.map(point => ({
         time: formatTime(point.start_time, granularity),
         purchases: point.stats.conversion_purchases || 0,
         checkouts: point.stats.conversion_start_checkout || 0,
-        spend: (point.stats.spend || 0) / 1000000, // Convert microcurrency
-        impressions: (point.stats.impressions || 0) / 1000 // Scale down for readability
+        spend: (point.stats.spend || 0) / 1000000,
+        impressions: (point.stats.impressions || 0) / 1000
     }));
 
     if (chartData.length === 0) {
@@ -41,56 +38,89 @@ export const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({ data, granular
         );
     }
 
+    const CustomTooltip = ({ active, payload, label }: any) => {
+        if (active && payload && payload.length) {
+            return (
+                <div className={styles.glassTooltip}>
+                    <p className={styles.tooltipLabel}>{label}</p>
+                    {payload.map((entry: any, index: number) => (
+                        <div key={index} className={styles.tooltipItem} style={{ color: entry.stroke }}>
+                            <span className={styles.tooltipName}>{entry.name}:</span>
+                            <span className={styles.tooltipValue}>
+                                {entry.dataKey === 'spend' ? `$${Number(entry.value).toFixed(2)}` : Number(entry.value).toLocaleString()}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+        return null;
+    };
+
     return (
         <div className={styles.container}>
             <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <defs>
+                        <linearGradient id="colorPurchases" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorCheckouts" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorSpend" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                        </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
                     <XAxis
                         dataKey="time"
-                        stroke="#6b7280"
-                        style={{ fontSize: '12px' }}
+                        stroke="var(--color-text-secondary)"
+                        tick={{ fill: 'var(--color-text-secondary)', fontSize: 12 }}
+                        tickLine={false}
+                        axisLine={false}
+                        dy={10}
                     />
                     <YAxis
-                        stroke="#6b7280"
-                        style={{ fontSize: '12px' }}
+                        stroke="var(--color-text-secondary)"
+                        tick={{ fill: 'var(--color-text-secondary)', fontSize: 12 }}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(value) => value >= 1000 ? `${value / 1000}k` : value}
                     />
-                    <Tooltip
-                        contentStyle={{
-                            backgroundColor: 'white',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '8px',
-                            padding: '8px 12px'
-                        }}
-                    />
-                    <Legend
-                        wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
-                    />
-                    <Line
+                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--color-border)', strokeWidth: 1, strokeDasharray: '5 5' }} />
+                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                    <Area
                         type="monotone"
                         dataKey="purchases"
                         stroke="#10b981"
+                        fillOpacity={1}
+                        fill="url(#colorPurchases)"
                         strokeWidth={2}
                         name={t('reports.purchases')}
-                        dot={{ fill: '#10b981', r: 3 }}
                     />
-                    <Line
+                    <Area
                         type="monotone"
                         dataKey="checkouts"
                         stroke="#3b82f6"
+                        fillOpacity={1}
+                        fill="url(#colorCheckouts)"
                         strokeWidth={2}
                         name={t('reports.checkoutsInitiated')}
-                        dot={{ fill: '#3b82f6', r: 3 }}
                     />
-                    <Line
+                    <Area
                         type="monotone"
                         dataKey="spend"
                         stroke="#f59e0b"
+                        fillOpacity={1}
+                        fill="url(#colorSpend)"
                         strokeWidth={2}
                         name={t('reports.totalSpend')}
-                        dot={{ fill: '#f59e0b', r: 3 }}
                     />
-                </LineChart>
+                </AreaChart>
             </ResponsiveContainer>
         </div>
     );

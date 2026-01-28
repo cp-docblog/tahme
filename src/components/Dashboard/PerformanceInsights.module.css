@@ -8,6 +8,26 @@
 
 .card {
     height: 100%;
+    background: rgba(var(--color-surface-rgb, 255, 255, 255), 0.7) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(var(--color-border-rgb, 229, 231, 235), 0.5);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    padding: 16px;
+    /* Override Card default if needed */
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .card {
+    background: rgba(var(--color-surface-rgb, 30, 41, 59), 0.6) !important;
+    border-color: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .header {
@@ -43,16 +63,19 @@
 .insight {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
+    gap: 16px;
     padding: 16px;
-    background: var(--color-bg-secondary);
-    border-radius: 8px;
-    border-left: 3px solid var(--color-success);
-    transition: all 0.2s ease;
+    background: rgba(var(--color-bg-rgb, 249, 250, 251), 0.5);
+    border-radius: 12px;
+    border: 1px solid rgba(var(--color-border-rgb, 229, 231, 235), 0.5);
+    border-left: 4px solid var(--color-success);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .insight:hover {
-    background: var(--color-surface-hover);
+    background: rgba(var(--color-bg-rgb, 249, 250, 251), 0.9);
+    transform: translateX(4px);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
 }
 
 .insight.warning {
@@ -154,7 +177,17 @@
 
 /* Dark mode */
 [data-theme="dark"] .insight {
-    background: var(--color-surface);
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-left: 4px solid var(--color-success);
+}
+
+[data-theme="dark"] .insight:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .insight.warning {
+    border-left-color: var(--color-warning);
 }
 
 [data-theme="dark"] .metricBadge {

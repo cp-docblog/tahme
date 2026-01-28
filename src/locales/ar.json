@@ -12,12 +12,52 @@
     },
     "dashboard": {
         "title": "لوحة التحكم",
-        "subtitle": "مرحباً بك في نظام إدارة الحملات التسويقية",
+        "subtitle": "نظرة عامة على أداء الحملات - الفترة كاملة",
+        "loading": "جاري تحميل بيانات لوحة التحكم من Snap و TikTok و Facebook...",
+        "refresh": "تحديث",
+        "refreshing": "جاري التحديث...",
+        "retry": "إعادة المحاولة",
         "stats": {
             "totalClients": "إجمالي العملاء",
-            "activeCampaigns": "الحملات النشطة",
+            "totalCampaigns": "إجمالي الحملات",
+            "totalSpend": "إجمالي الإنفاق",
+            "totalRevenue": "إجمالي الإيرادات",
+            "blendedRoas": "عائد الإنفاق المدمج",
             "users": "المستخدمين",
             "completedAnalyses": "التحليلات المكتملة"
+        },
+        "clientPerformance": {
+            "title": "أداء العملاء",
+            "noClients": "لم يتم العثور على عملاء",
+            "table": {
+                "client": "العميل",
+                "platforms": "المنصات",
+                "spend": "الإنفاق",
+                "revenue": "الإيرادات",
+                "roas": "عائد الإنفاق",
+                "bestChannel": "أفضل قناة",
+                "top": "الأفضل:",
+                "topCreative": "أفضل التصاميم أداءً",
+                "noCreative": "لا توجد بيانات متاحة للتصاميم."
+            }
+        },
+        "performanceInsights": {
+            "whatsWorking": "ما الذي يحقق نتائج",
+            "needsAttention": "يحتاج إلى اهتمام",
+            "emptyWorking": "لا يوجد أداء متميز بعد",
+            "emptyNeedsAttention": "جميع الحملات تعمل بشكل جيد!",
+            "messages": {
+                "underperformer": "{{client}} ({{channel}}): عائد منخفض ({{roas}}) مع إنفاق كبير.",
+                "high_performer": "{{client}} ({{channel}}): أداء قوي بعائد {{roas}}."
+            }
+        },
+        "aiSummary": {
+            "title": "ملخص الأداء بالذكاء الاصطناعي",
+            "loading": "جاري إنشاء رؤى الذكاء الاصطناعي...",
+            "keyInsights": "الرؤى الرئيسية",
+            "recommendedActions": "الإجراءات الموصى بها",
+            "confidence": "ثقة الذكاء الاصطناعي",
+            "save": "توفير:"
         },
         "recentActivity": "النشاط الأخير",
         "activities": {

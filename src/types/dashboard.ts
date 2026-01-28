@@ -31,6 +31,18 @@ export interface ClientPerformanceData {
         name: string;
         roas: number;
     };
+    topAds?: {
+        tiktok?: TopAd;
+        facebook?: TopAd;
+        snapchat?: TopAd;
+    };
+}
+
+export interface TopAd {
+    name: string;
+    spend: number;
+    roas: number;
+    thumbnail?: string;
 }
 
 export interface PerformanceInsight {

@@ -35,13 +35,31 @@
     padding: var(--spacing-xl);
     text-align: center;
     cursor: pointer;
-    transition: all var(--transition-base);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    background: rgba(var(--color-surface-rgb, 255, 255, 255), 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(var(--color-primary-rgb), 0.1);
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
 }
 
 .platformCard:not(.comingSoon):hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+    background: rgba(var(--color-surface-rgb, 255, 255, 255), 0.9);
+    border-color: rgba(var(--color-primary-rgb), 0.3);
+}
+
+[data-theme="dark"] .platformCard {
+    background: rgba(30, 41, 59, 0.6);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .platformCard:not(.comingSoon):hover {
+    background: rgba(30, 41, 59, 0.8);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
 }
 
 .platformCard.comingSoon {

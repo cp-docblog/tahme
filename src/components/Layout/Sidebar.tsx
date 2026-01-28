@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Building2, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, Users, Building2, TrendingUp, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../contexts/AuthContext';
 import styles from './Sidebar.module.css';
 
 interface SidebarProps {
@@ -12,6 +13,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     const location = useLocation();
     const { t } = useTranslation();
+    const { user, profile, signOut } = useAuth();
 
     const menuItems = [
         { path: '/', label: t('nav.dashboard'), icon: LayoutDashboard },
@@ -19,6 +21,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         { path: '/users', label: t('nav.users'), icon: Users },
         { path: '/clients', label: t('nav.clients'), icon: Building2 },
     ];
+
+    const handleLogout = async () => {
+        try {
+            await signOut();
+        } catch (error) {
+            console.error('Error signing out:', error);
+        }
+    };
+
+    const userInitials = profile?.full_name
+        ? profile.full_name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
+        : user?.email?.substring(0, 2).toUpperCase() || 'U';
 
     return (
         <>
@@ -52,10 +66,34 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     })}
                 </nav>
 
+                {/* User Profile Section */}
+                {user && (
+                    <div className={styles.userProfile}>
+                        <div className={styles.userAvatar}>
+                            {userInitials}
+                        </div>
+                        <div className={styles.userInfo}>
+                            <div className={styles.userName}>
+                                {profile?.full_name || user.email}
+                            </div>
+                            <div className={styles.userRole}>
+                                {profile?.role || 'User'}
+                            </div>
+                        </div>
+                        <button
+                            className={styles.logoutBtn}
+                            onClick={handleLogout}
+                            title={t('auth.signOut') || 'Sign Out'}
+                        >
+                            <LogOut size={18} />
+                        </button>
+                    </div>
+                )}
+
                 <div className={styles.footer}>
                     <p className={styles.footerText}>{t('footer.copyright')}</p>
                     <p className={styles.footerSubtext}>
-                        {t('footer.createdBy')} <strong>{t('footer.cyiperDevcode')}</strong> {t('footer.for')} {t('footer.tashweesh')}
+                        {t('footer.createdBy')} <a href="https://www.cp-devcode.com" target="_blank" rel="noopener noreferrer" className={styles.brandName}>{t('footer.cyiperDevcode')}</a>
                     </p>
                 </div>
             </aside>

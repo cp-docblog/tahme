@@ -16,6 +16,10 @@ interface InsightsParams {
     campaign_id?: string  // Filter by specific campaign
     adset_id?: string     // Filter by specific ad set
     granularity?: 'TOTAL' | 'DAY' | 'HOUR'  // Time breakdown
+    limit?: number
+    sort?: string[]
+    order_field?: string
+    order_type?: 'ASC' | 'DESC'
 }
 
 serve(async (req) => {
@@ -37,7 +41,7 @@ serve(async (req) => {
 
         // Build fields for insights request - include IDs for mapping stats back
         // Add date_start and date_stop for time series data
-        const baseFields = 'campaign_id,adset_id,ad_id,spend,impressions,clicks,cpc,cpm,reach,actions,action_values,conversions,cost_per_action_type'
+        const baseFields = 'campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,spend,impressions,clicks,cpc,cpm,reach,actions,action_values,conversions,cost_per_action_type'
         const fields = granularity !== 'TOTAL' ? `${baseFields},date_start,date_stop` : baseFields
 
         // Determine the endpoint based on filtering
@@ -53,23 +57,34 @@ serve(async (req) => {
             endpoint = `${FB_GRAPH_API}/act_${ad_account_id}/insights`
         }
 
-        let url = `${endpoint}?fields=${fields}&level=${level}&access_token=${access_token}`
+        // Construct URL using URLSearchParams for correct encoding
+        const queryParams = new URLSearchParams()
+        queryParams.append('access_token', access_token)
+        queryParams.append('fields', fields)
+        queryParams.append('level', level)
 
         if (start_date && end_date) {
-            url += `&time_range={"since":"${start_date}","until":"${end_date}"}`
+            queryParams.append('time_range', JSON.stringify({ since: start_date, until: end_date }))
         } else {
-            // Default to last 30 days
-            url += `&date_preset=last_30d`
+            queryParams.append('date_preset', 'last_30d')
         }
 
-        // Add time_increment for granularity
-        if (granularity === 'DAY') {
-            url += `&time_increment=1`  // 1 day increment
-        } else if (granularity === 'HOUR') {
-            // Facebook doesn't support true hourly in Insights API
-            // Use daily as fallback (HOUR will show daily data on FB)
-            url += `&time_increment=1`
+        if (granularity === 'DAY' || granularity === 'HOUR') {
+            queryParams.append('time_increment', '1')
         }
+
+        if (params.limit) {
+            queryParams.append('limit', String(params.limit))
+        }
+
+        if (params.sort) {
+            queryParams.append('sort', JSON.stringify(params.sort))
+        } else if (params.order_field) {
+            const direction = params.order_type === 'ASC' ? 'ascending' : 'descending'
+            queryParams.append('sort', JSON.stringify([`${params.order_field}_${direction}`]))
+        }
+
+        const url = `${endpoint}?${queryParams.toString()}`
 
         const response = await fetch(url)
         const data = await response.json()
@@ -149,16 +164,21 @@ serve(async (req) => {
         // TOTAL granularity - aggregate stats by entity (existing logic)
         const insights = (data.data || []).map((insight: any) => {
             let entityId: string
+            let entityName: string
             if (level === 'ad') {
                 entityId = insight.ad_id
+                entityName = insight.ad_name
             } else if (level === 'adset') {
                 entityId = insight.adset_id
+                entityName = insight.adset_name
             } else {
                 entityId = insight.campaign_id
+                entityName = insight.campaign_name
             }
 
             return {
                 id: entityId,
+                name: entityName,
                 stats: parseInsightStats(insight)
             }
         })

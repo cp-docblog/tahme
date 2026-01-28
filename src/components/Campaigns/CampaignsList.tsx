@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronRight, Activity, TrendingUp, Award, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '../../lib/supabase';
 import { Card } from '../UI/Card';
 import { Tabs, Tab } from '../UI/Tabs';
 import { DateRangePicker } from '../UI/DateRangePicker';
@@ -102,9 +103,6 @@ export const CampaignsList: React.FC<CampaignsListProps> = ({
 
     const fetchPerformanceStats = async () => {
         try {
-            const webhookUrl = process.env.REACT_APP_BACKEND_WEBHOOK;
-            if (!webhookUrl) return;
-
             // Build query string following AdReport pattern
             const formatSnapchatDate = (date: Date, isEndDate: boolean = false): string => {
                 const year = date.getFullYear();
@@ -133,10 +131,14 @@ export const CampaignsList: React.FC<CampaignsListProps> = ({
                 endDate = dateRange.end;
             } else {
                 const today = new Date();
-                const thirtyDaysAgo = new Date();
-                thirtyDaysAgo.setDate(today.getDate() - 30);
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+
+                const thirtyDaysAgo = new Date(yesterday);
+                thirtyDaysAgo.setDate(yesterday.getDate() - 29); // 30 days total
+
                 startDate = thirtyDaysAgo;
-                endDate = today;
+                endDate = yesterday;
             }
 
             const params: string[] = [];
@@ -151,22 +153,15 @@ export const CampaignsList: React.FC<CampaignsListProps> = ({
 
             const queryString = params.join('&');
 
-            // Construct the payload object
-            const payload = {
-                accountId: adAccountId,
-                queryString: queryString
-            };
-
-            // Send as POST with body
-            const response = await fetch(`${webhookUrl}/tash-snap-account-stats`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+            // Call the new snap-insights edge function
+            const { data, error: fnError } = await supabase.functions.invoke('snap-insights', {
+                body: {
+                    accountId: adAccountId,
+                    queryString: queryString
+                }
             });
 
-            if (!response.ok) return;
-
-            const data = await response.json();
+            if (fnError) return;
 
             // Parse stats by campaign ID from breakdown_stats
             const statsMap = new Map<string, any>();

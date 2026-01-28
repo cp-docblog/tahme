@@ -12,12 +12,55 @@
     },
     "dashboard": {
         "title": "Dashboard",
-        "subtitle": "Welcome to the Campaign Management System",
+        "subtitle": "Campaign Performance Overview - Lifetime",
+        "loading": "Loading dashboard data from Snap, TikTok, Facebook...",
+        "refresh": "Refresh",
+        "refreshing": "Refreshing...",
+        "retry": "Retry",
         "stats": {
             "totalClients": "Total Clients",
-            "activeCampaigns": "Active Campaigns",
+            "totalCampaigns": "Total Campaigns",
+            "totalSpend": "Total Spend",
+            "totalRevenue": "Total Revenue",
+            "blendedRoas": "Blended ROAS",
             "users": "Users",
             "completedAnalyses": "Completed Analyses"
+        },
+        "clientPerformance": {
+            "title": "Client Performance",
+            "loading": "Loading client data...",
+            "noClients": "No clients found",
+            "table": {
+                "client": "Client",
+                "platforms": "Platforms",
+                "spend": "Spend",
+                "revenue": "Revenue",
+                "roas": "ROAS",
+                "bestChannel": "Best Channel",
+                "top": "Top:",
+                "topCreative": "Top Performing Creative",
+                "noCreative": "No creative data available.",
+                "spendLabel": "Spend",
+                "roasLabel": "ROAS"
+            }
+        },
+        "performanceInsights": {
+            "whatsWorking": "What's Working",
+            "needsAttention": "Needs Attention",
+            "emptyWorking": "No standout performances yet",
+            "emptyNeedsAttention": "All campaigns performing well!",
+            "messages": {
+                "underperformer": "{{client}} ({{channel}}): Low ROAS ({{roas}}) with significant spend.",
+                "high_performer": "{{client}} ({{channel}}): Strong performance with {{roas}} ROAS."
+            }
+        },
+        "aiSummary": {
+            "title": "AI Performance Summary",
+            "loading": "Generating AI insights...",
+            "keyInsights": "Key Insights",
+            "recommendedActions": "Recommended Actions",
+            "confidence": "AI Confidence",
+            "save": "Save:"
         },
         "recentActivity": "Recent Activity",
         "activities": {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TrendingUp, DollarSign, ShoppingCart, CreditCard, Target, Eye, Sparkles, Play, Film } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '../../lib/supabase';
 import { Card } from '../UI/Card';
 import { Button } from '../UI/Button';
 import { DateRangePicker } from '../UI/DateRangePicker';
@@ -152,17 +153,6 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
         setError(null);
 
         try {
-            const webhookUrl = process.env.REACT_APP_BACKEND_WEBHOOK;
-            if (!webhookUrl) {
-                throw new Error('Backend webhook URL not configured');
-            }
-
-            // Build request body
-            const requestBody: any = {
-                ad_account_id: adAccountId,
-                ad_id: adId
-            };
-
             // Build complete URL query string for Snapchat API
             const buildQueryString = (): string => {
                 const params: string[] = [];
@@ -219,11 +209,14 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
                 } else {
                     // Default: Last 30 days
                     const today = new Date();
-                    const thirtyDaysAgo = new Date();
-                    thirtyDaysAgo.setDate(today.getDate() - 30);
+                    const yesterday = new Date(today);
+                    yesterday.setDate(yesterday.getDate() - 1);
+
+                    const thirtyDaysAgo = new Date(yesterday);
+                    thirtyDaysAgo.setDate(yesterday.getDate() - 29); // 30 days total
 
                     startDate = thirtyDaysAgo;
-                    endDate = today;
+                    endDate = yesterday;
                 }
 
                 // Validate and adjust for HOURLY granularity constraint (max 7 days)
@@ -260,21 +253,19 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
             };
 
             // Add query string to request
-            requestBody.query_string = buildQueryString();
+            const query_string = buildQueryString();
 
-            const response = await fetch(`${webhookUrl}/fetch-snap-ad-report`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestBody),
+            // Call the new snap-ad-insights edge function
+            const { data, error: fnError } = await supabase.functions.invoke('snap-ad-insights', {
+                body: {
+                    ad_id: adId,
+                    query_string: query_string
+                }
             });
 
-            if (!response.ok) {
+            if (fnError) {
                 throw new Error('Failed to fetch ad report');
             }
-
-            const data: AdReportResponse[] = await response.json();
 
             // Parse the response based on granularity
             if (granularity === 'TOTAL') {
@@ -289,7 +280,7 @@ export const AdReport: React.FC<AdReportProps> = ({ adId, adName, adAccountId })
                     setTimeseriesData(timeseries);
 
                     // Calculate aggregate stats for metric cards
-                    const aggregateStats = timeseries.reduce((acc, point) => {
+                    const aggregateStats = timeseries.reduce((acc: any, point: any) => {
                         return {
                             impressions: acc.impressions + (point.stats.impressions || 0),
                             swipe_up_percent: acc.swipe_up_percent + (point.stats.swipe_up_percent || 0),

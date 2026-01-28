@@ -52,14 +52,31 @@
 
 .statCard {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: var(--spacing-sm);
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 20px;
+    background: rgba(var(--color-surface-rgb, 255, 255, 255), 0.7) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(var(--color-border-rgb, 229, 231, 235), 0.5);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border-radius: 16px !important;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     animation: slideUp 0.5s ease-out;
     animation-fill-mode: both;
-    padding: var(--spacing-lg);
-    /* Ensure padding */
+}
+
+[data-theme="dark"] .statCard {
+    background: rgba(var(--color-surface-rgb, 30, 41, 59), 0.6) !important;
+    border-color: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.statCard:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
 }
 
 .statCard:nth-child(1) {
@@ -78,26 +95,88 @@
     animation-delay: 0.4s;
 }
 
-.statIcon {
-    font-size: 3rem;
+.statCard:nth-child(5) {
+    animation-delay: 0.5s;
 }
 
-.statContent {
-    flex: 1;
+.iconWrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0;
+    /* Removed for side-by-side */
+    flex-shrink: 0;
+    /* Prevent shrinking */
+    transition: transform 0.2s ease;
+}
+
+.statCard:hover .iconWrapper {
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* Icon Colors */
+.iconClients {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.iconCampaigns {
+    background: rgba(139, 92, 246, 0.1);
+    color: #8b5cf6;
+}
+
+.iconSpend {
+    background: rgba(249, 115, 22, 0.1);
+    color: #f97316;
+}
+
+.iconRevenue {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.iconRoas {
+    background: rgba(236, 72, 153, 0.1);
+    color: #ec4899;
+}
+
+[data-theme="dark"] .iconClients {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+[data-theme="dark"] .iconCampaigns {
+    background: rgba(139, 92, 246, 0.2);
+}
+
+[data-theme="dark"] .iconSpend {
+    background: rgba(249, 115, 22, 0.2);
+}
+
+[data-theme="dark"] .iconRevenue {
+    background: rgba(16, 185, 129, 0.2);
+}
+
+[data-theme="dark"] .iconRoas {
+    background: rgba(236, 72, 153, 0.2);
 }
 
 .statValue {
-    font-size: 1.75rem;
-    font-weight: 900;
+    font-size: 2rem;
+    font-weight: 800;
     margin: 0;
     color: var(--color-text);
     word-break: break-word;
-    line-height: 1.2;
+    line-height: 1;
+    letter-spacing: -0.5px;
 }
 
 .statLabel {
     color: var(--color-text-secondary);
-    font-size: 0.875rem;
+    font-size: 0.9rem;
+    font-weight: 500;
     margin: 0;
 }
 
