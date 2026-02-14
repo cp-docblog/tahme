@@ -115,11 +115,46 @@ serve(async (req) => {
 
 // --- Fetchers ---
 
+// TikTok API has a 365-day limit, so we need to fetch in chunks
+function getYearlyDateRanges(): Array<{ start_date: string, end_date: string }> {
+    const ranges: Array<{ start_date: string, end_date: string }> = []
+    const endDate = new Date()
+    endDate.setDate(endDate.getDate() - 1) // Yesterday
+
+    // Start from 2020-01-01
+    let currentStart = new Date('2020-01-01')
+
+    while (currentStart < endDate) {
+        // Each chunk is 365 days max
+        const chunkEnd = new Date(currentStart)
+        chunkEnd.setDate(chunkEnd.getDate() + 364) // 365 days total
+
+        const actualEnd = chunkEnd < endDate ? chunkEnd : endDate
+
+        ranges.push({
+            start_date: currentStart.toISOString().split('T')[0],
+            end_date: actualEnd.toISOString().split('T')[0]
+        })
+
+        // Move to next chunk
+        currentStart = new Date(actualEnd)
+        currentStart.setDate(currentStart.getDate() + 1)
+    }
+
+    return ranges
+}
+
+// For Facebook which has a 37-month limit
 function getLifetimeRange() {
     const end = new Date()
     end.setDate(end.getDate() - 1) // Yesterday
+
+    // Facebook has a 37-month limit, so use 36 months to be safe
+    const start = new Date()
+    start.setMonth(start.getMonth() - 36)
+
     return {
-        start_date: '2020-01-01',
+        start_date: start.toISOString().split('T')[0],
         end_date: end.toISOString().split('T')[0]
     }
 }
@@ -149,62 +184,67 @@ async function fetchSnapchat(client: any, backendUrl: string) {
 async function fetchTikTok(client: any, baseUrl: string, key: string) {
     if (!client.tiktok_advertiser_id) return null
     try {
-        const res = await fetch(`${baseUrl}/tt-insights`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${key}`
-            },
-            body: JSON.stringify({
-                advertiser_id: client.tiktok_advertiser_id,
-                level: 'campaign',
-                granularity: 'TOTAL'
-            })
-        })
-        if (!res.ok) return null
-        const data = await res.json()
-        const rows = data[0]?.total_stats?.[0]?.total_stat?.breakdown_stats?.campaign || []
-
+        const dateRanges = getYearlyDateRanges()
         const EXCHANGE_RATE_SAR_TO_USD = 1 / 3.75
 
-        let spend = 0, revenue = 0
-        rows.forEach((r: any) => {
-            // Convert Spend from SAR to USD
-            const spendSAR = r.stats.spend
-            const spendUSD = spendSAR * EXCHANGE_RATE_SAR_TO_USD
-            spend += spendUSD
+        let totalSpend = 0, totalRevenue = 0
+        const allCampaigns: any[] = []
 
-            // Revenue Calculation & Conversion
-            // 1. Get Revenue in SAR (either raw or from ROAS)
-            let valSAR = 0
-            if (r.stats.roas) {
-                // ROAS * Spend(SAR) = Revenue(SAR)
-                // Note: spendSAR is in Micros? Check previous logic.
-                // fetchTikTok -> `spend: parseFloat(metrics.spend || 0) * 1000000` (Micros)
-                // So yes, we are operating in Micros here.
-                valSAR = r.stats.roas * spendSAR
-            } else {
-                valSAR = (r.stats.conversion_purchases_value || 0) * 1000000
-            }
+        // Fetch data for each year chunk and aggregate
+        for (const { start_date, end_date } of dateRanges) {
+            const res = await fetch(`${baseUrl}/tt-insights`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${key}`
+                },
+                body: JSON.stringify({
+                    advertiser_id: client.tiktok_advertiser_id,
+                    level: 'campaign',
+                    granularity: 'TOTAL',
+                    start_date,
+                    end_date
+                })
+            })
 
-            // 2. Convert Revenue to USD
-            const valUSD = valSAR * EXCHANGE_RATE_SAR_TO_USD
-            revenue += valUSD
+            if (!res.ok) continue // Skip failed chunks
 
-            // Update individual row stats for consistent downstream usage (like Top Ads)
-            r.stats.spend = spendUSD
-            r.stats.conversion_purchases_value = valUSD / 1000000 // Convert back to standard units for UI display if needed? 
-            // Wait, Top Ads UI uses `client.topAds`. `topAds` comes from where?
-            // `dashboard-data` calling `fetchTopAdTikTok`.
-            // We need to check if `fetchTopAdTikTok` also needs conversion.
-        })
-        return { spend, revenue, campaigns: rows }
+            const data = await res.json()
+            const rows = data[0]?.total_stats?.[0]?.total_stat?.breakdown_stats?.campaign || []
+
+            rows.forEach((r: any) => {
+                // Convert Spend from SAR to USD
+                const spendSAR = r.stats.spend
+                const spendUSD = spendSAR * EXCHANGE_RATE_SAR_TO_USD
+                totalSpend += spendUSD
+
+                // Revenue Calculation & Conversion
+                let valSAR = 0
+                if (r.stats.roas) {
+                    valSAR = r.stats.roas * spendSAR
+                } else {
+                    valSAR = (r.stats.conversion_purchases_value || 0) * 1000000
+                }
+
+                const valUSD = valSAR * EXCHANGE_RATE_SAR_TO_USD
+                totalRevenue += valUSD
+
+                // Update row stats for downstream usage
+                r.stats.spend = spendUSD
+                r.stats.conversion_purchases_value = valUSD / 1000000
+            })
+
+            allCampaigns.push(...rows)
+        }
+
+        return { spend: totalSpend, revenue: totalRevenue, campaigns: allCampaigns }
     } catch { return null }
 }
 
 async function fetchFacebook(client: any, baseUrl: string, key: string) {
     if (!client.facebook_ad_account_id || !client.facebook_access_token) return null
     try {
+        const { start_date, end_date } = getLifetimeRange()
         const res = await fetch(`${baseUrl}/fb-insights`, {
             method: 'POST',
             headers: {
@@ -215,7 +255,9 @@ async function fetchFacebook(client: any, baseUrl: string, key: string) {
                 ad_account_id: client.facebook_ad_account_id,
                 access_token: client.facebook_access_token,
                 level: 'campaign',
-                granularity: 'TOTAL'
+                granularity: 'TOTAL',
+                start_date,
+                end_date
             })
         })
         if (!res.ok) return null
@@ -434,8 +476,39 @@ async function fetchTopAdSnapchat(client: any, baseUrl: string, key: string) {
             const ad = rows[0]
             console.log(`[Snap] Top Ad ID: ${ad.id} ($${(ad.stats.spend / 1000000).toFixed(2)})`)
 
+            // Fetch ad name from Snapchat API
+            let adName = `Ad ${ad.id.substring(0, 8)}...`
+            try {
+                // Fetch Snapchat access token from creds table
+                const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+                const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+                const supabase = createClient(supabaseUrl, supabaseKey)
+
+                const { data: credData } = await supabase
+                    .from('creds')
+                    .select('cred')
+                    .eq('cred_name', 'snap_at')
+                    .single()
+
+                if (credData?.cred) {
+                    const adRes = await fetch(`https://adsapi.snapchat.com/v1/ads/${ad.id}`, {
+                        headers: {
+                            'Authorization': `Bearer ${credData.cred}`,
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    if (adRes.ok) {
+                        const adData = await adRes.json()
+                        adName = adData?.ads?.[0]?.ad?.name || adName
+                        console.log(`[Snap] Resolved Ad Name: ${adName}`)
+                    }
+                }
+            } catch (nameErr) {
+                console.error('[Snap] Failed to fetch ad name:', nameErr)
+            }
+
             return {
-                name: ad.name || `Ad ${ad.id.substring(0, 8)}...`,
+                name: adName,
                 spend: ad.stats.spend,
                 revenue: ad.stats.conversion_purchases_value
             }

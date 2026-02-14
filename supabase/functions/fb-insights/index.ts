@@ -65,6 +65,11 @@ serve(async (req) => {
 
         if (start_date && end_date) {
             queryParams.append('time_range', JSON.stringify({ since: start_date, until: end_date }))
+        } else if (start_date || end_date) {
+            // If only one date is provided, still use time_range with appropriate defaults
+            const since = start_date || '2020-01-01'
+            const until = end_date || new Date().toISOString().split('T')[0]
+            queryParams.append('time_range', JSON.stringify({ since, until }))
         } else {
             queryParams.append('date_preset', 'last_30d')
         }
