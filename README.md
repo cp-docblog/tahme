@@ -168,7 +168,7 @@ src/
 عند الضغط على "تحليل" في صفحة الحملات، يتم إرسال البيانات إلى:
 
 ```
-POST https://aibackend.cp-devcode.com/webhooks
+POST https://aibackend.cyiper.com/webhook
 ```
 
 البيانات المرسلة:
@@ -195,7 +195,7 @@ npm run build
 docker build \
   --build-arg REACT_APP_SUPABASE_URL=your_supabase_url \
   --build-arg REACT_APP_SUPABASE_ANON_KEY=your_anon_key \
-  --build-arg REACT_APP_BACKEND_WEBHOOK=https://aibackend.cp-devcode.com/webhooks \
+  --build-arg REACT_APP_BACKEND_WEBHOOK=https://aibackend.cyiper.com/webhook \
   -t tashweesh:latest .
 ```
 
@@ -214,7 +214,7 @@ docker run -d -p 3000:80 --name tashweesh tashweesh:latest
 ```env
 REACT_APP_SUPABASE_URL=your_supabase_url
 REACT_APP_SUPABASE_ANON_KEY=your_anon_key
-REACT_APP_BACKEND_WEBHOOK=https://aibackend.cp-devcode.com/webhooks
+REACT_APP_BACKEND_WEBHOOK=https://aibackend.cyiper.com/webhook
 ```
 
 #### 2. بناء وتشغيل التطبيق

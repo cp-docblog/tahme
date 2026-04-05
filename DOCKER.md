@@ -43,7 +43,7 @@ The Dockerfile uses a multi-stage build process:
 docker build \
   --build-arg REACT_APP_SUPABASE_URL=https://your-project.supabase.co \
   --build-arg REACT_APP_SUPABASE_ANON_KEY=your-anon-key \
-  --build-arg REACT_APP_BACKEND_WEBHOOK=https://aibackend.cp-devcode.com/webhooks \
+  --build-arg REACT_APP_BACKEND_WEBHOOK=https://aibackend.cyiper.com/webhook \
   -t tashweesh:latest .
 ```
 
@@ -120,7 +120,7 @@ Required environment variables:
 |----------|-------------|---------|
 | `REACT_APP_SUPABASE_URL` | Supabase project URL | `https://xxx.supabase.co` |
 | `REACT_APP_SUPABASE_ANON_KEY` | Supabase anonymous key | `eyJhbGc...` |
-| `REACT_APP_BACKEND_WEBHOOK` | Backend webhook URL | `https://aibackend.cp-devcode.com/webhooks` |
+| `REACT_APP_BACKEND_WEBHOOK` | Backend webhook URL | `https://aibackend.cyiper.com/webhook` |
 
 ## Health Checks
 

@@ -93,7 +93,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <div className={styles.footer}>
                     <p className={styles.footerText}>{t('footer.copyright')}</p>
                     <p className={styles.footerSubtext}>
-                        {t('footer.createdBy')} <a href="https://www.cp-devcode.com" target="_blank" rel="noopener noreferrer" className={styles.brandName}>{t('footer.cyiperDevcode')}</a>
+                        {t('footer.createdBy')} <a href="https://www.cyiper.com" target="_blank" rel="noopener noreferrer" className={styles.brandName}>{t('footer.cyiperDevcode')}</a>
                     </p>
                 </div>
             </aside>

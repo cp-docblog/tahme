@@ -26,9 +26,9 @@ const FacebookIcon = () => (
     </svg>
 );
 
-const SNAPCHAT_OAUTH_URL = 'https://accounts.snapchat.com/login/oauth2/authorize?client_id=887c761d-506d-4e30-ab21-30a4d9b647b2&redirect_uri=https%3A%2F%2Faibackend.cp-devcode.com%2Fwebhook%2Fsnapchat-auth&response_type=code&scope=snapchat-marketing-api';
+const SNAPCHAT_OAUTH_URL = 'https://accounts.snapchat.com/login/oauth2/authorize?client_id=887c761d-506d-4e30-ab21-30a4d9b647b2&redirect_uri=https%3A%2F%2Faibackend.cyiper.com%2Fwebhook%2Fsnapchat-auth&response_type=code&scope=snapchat-marketing-api';
 
-const TIKTOK_OAUTH_URL = 'https://business-api.tiktok.com/portal/auth?app_id=7596881349719949313&state=your_custom_params&redirect_uri=https://aibackend.cp-devcode.com/webhook/tash-tiktok-at';
+const TIKTOK_OAUTH_URL = 'https://business-api.tiktok.com/portal/auth?app_id=7596881349719949313&state=your_custom_params&redirect_uri=https://aibackend.cyiper.com/webhook/tash-tiktok-at';
 
 interface Client {
     id: string;
